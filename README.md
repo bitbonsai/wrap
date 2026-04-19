@@ -18,15 +18,24 @@
 ```bash
 npx skills add github:bitbonsai/wrap
 ```
-
 You can use [skills.sh](https://skills.sh) to add this skill globally.
 
 ### Claude Code
 
 ```bash
-claude skill install /path/to/wrap
-# or
 claude skill install github:bitbonsai/wrap
+```
+
+### pi.dev
+
+```bash
+pi skill install github:bitbonsai/wrap
+```
+
+### OpenCode
+
+```bash
+opencode skill install github:bitbonsai/wrap
 ```
 
 ## Usage
