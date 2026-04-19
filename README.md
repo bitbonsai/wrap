@@ -19,6 +19,8 @@
 npx skills add github:bitbonsai/wrap
 ```
 
+You can use [skills.sh](https://skills.sh) to add this skill globally.
+
 ### Claude Code
 
 ```bash
