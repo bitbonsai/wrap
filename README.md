@@ -18,6 +18,7 @@
 ```bash
 npx skills add github:bitbonsai/wrap
 ```
+
 You can use [skills.sh](https://skills.sh) to add this skill globally.
 
 ### Claude Code
@@ -29,13 +30,15 @@ claude skill install github:bitbonsai/wrap
 ### pi.dev
 
 ```bash
-pi skill install github:bitbonsai/wrap
+pi install git:github.com/bitbonsai/wrap
 ```
 
 ### OpenCode
 
+OpenCode discovers skills from `.claude/skills/`, `.opencode/skills/`, or `~/.config/opencode/skills/`. Clone the repo into one of these paths:
+
 ```bash
-opencode skill install github:bitbonsai/wrap
+git clone https://github.com/bitbonsai/wrap.git .claude/skills/wrap
 ```
 
 ## Usage
