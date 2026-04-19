@@ -1,6 +1,6 @@
 <div align="center">
 	<br>
-	<img width="137" height="137" src="wrap.svg" alt="Wrap">
+	<img width="137" height="137" src="icon.svg" alt="Wrap">
 	<br>
 	<br>
 	<h1>wrap</h1>
