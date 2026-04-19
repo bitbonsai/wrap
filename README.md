@@ -13,6 +13,14 @@
 
 ## Install
 
+### Vercel AI SDK
+
+```bash
+npx skills add github:bitbonsai/wrap
+```
+
+### Claude Code
+
 ```bash
 claude skill install /path/to/wrap
 # or
@@ -46,10 +54,57 @@ Say any of:
 
 ## Recommended project setup
 
-For best results, keep these files in your repo:
+The skill works with any repo, but it's designed to augment a few specific files. It updates all of these if present, skips silently if not.
 
-- **`agent-learnings.md`** — gotcha list organized by category (code traps, deploy flow, infra, testing)
-- **`globalcontext.md`** — living orientation snapshot (version, architecture, env vars, active work)
-- **`.plans/INDEX.md`** — plan tracker with Active/Planned/Recently shipped sections
+### `agent-learnings.md`
 
-The skill updates all of these if present, skips silently if not.
+A running list of gotchas organized by category. Think of it as your project's "lessons learned" log.
+
+```markdown
+## Code traps
+- Don't use `find -delete` — it deletes directories matching the pattern too
+- `bun run` doesn't pass env vars the same way as `npm run`
+
+## Deploy flow
+- Always run `terraform plan` before `apply` — the staging state drifts fast
+
+## Infra
+- The ECS cluster name is `prod-web`, not `production-web`
+```
+
+**Why it helps:** Future agents don't have to relearn the hard way. A single gotcha can save hours of debugging the same trap twice.
+
+### `globalcontext.md`
+
+A living orientation snapshot. One page that answers "what is this thing and how do I work on it?"
+
+```markdown
+# MyProject
+
+- **Stack:** Next.js 14, Tailwind, PostgreSQL, Vercel
+- **Node version:** 20.x
+- **Key env vars:** `DATABASE_URL`, `OPENAI_API_KEY`
+- **Dev server:** `bun run dev` (port 3000)
+- **Active work:** Migrating auth from JWT to OAuth2
+- **Last deploy:** 2026-04-19
+```
+
+**Why it helps:** When an agent joins a session cold (especially after `/clear`), it has zero context. This file is a cheat sheet that prevents the "what framework is this again?" warm-up loop.
+
+### `.plans/INDEX.md`
+
+A lightweight project tracker with three sections:
+
+```markdown
+## Active
+- [ ] Refactor checkout flow to use new payment API
+
+## Planned
+- [ ] Add Apple Pay support
+- [ ] Migrate to App Router
+
+## Recently shipped
+- [x] Fix cart state bug on mobile
+```
+
+**Why it helps:** Agents constantly lose track of what's in progress versus what's done. A simple index prevents "did we already do this?" and keeps work organized without a full project management tool.
