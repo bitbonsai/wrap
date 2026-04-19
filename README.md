@@ -35,7 +35,7 @@ pi install git:github.com/bitbonsai/wrap
 
 ### OpenCode
 
-OpenCode discovers skills from `.claude/skills/`, `.opencode/skills/`, or `~/.config/opencode/skills/`. Clone the repo into one of these paths:
+OpenCode is compatible with Claude skills. Clone into `.claude/skills/`:
 
 ```bash
 git clone https://github.com/bitbonsai/wrap.git .claude/skills/wrap
