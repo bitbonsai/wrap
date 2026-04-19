@@ -13,7 +13,7 @@
 
 ## Install
 
-### Vercel AI SDK
+### skills.sh
 
 ```bash
 npx skills add github:bitbonsai/wrap
