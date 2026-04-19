@@ -97,14 +97,19 @@ A lightweight project tracker with three sections:
 
 ```markdown
 ## Active
-- [ ] Refactor checkout flow to use new payment API
+- [ ] Add dark mode toggle (waiting on design tokens)
+- [ ] Refactor webhook handlers to use Bull queues
+- [ ] Fix flaky e2e test on `/dashboard/billing`
 
 ## Planned
-- [ ] Add Apple Pay support
-- [ ] Migrate to App Router
+- [ ] Migrate from Stripe Checkout to Payment Elements
+- [ ] Add real-time collaboration via Y.js
+- [ ] Evaluate Vercel Edge vs Node runtime for API routes
 
 ## Recently shipped
-- [x] Fix cart state bug on mobile
+- [x] v2.4.0 — Team billing + seat management
+- [x] Migrated auth from JWT to OAuth2 (GitHub + Google)
+- [x] Switched test runner from Jest to Vitest
 ```
 
 **Why it helps:** Agents constantly lose track of what's in progress versus what's done. A simple index prevents "did we already do this?" and keeps work organized without a full project management tool.
