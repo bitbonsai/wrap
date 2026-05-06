@@ -54,6 +54,39 @@ Check for these files and update if present. Skip silently if missing.
 
 **.plans/INDEX.md**: Move completed plans to "Recently shipped". Add new plans if created during session. Keep "Recently shipped" to last ~5 entries.
 
-## Step 4: Confirm and prompt reset
+## Step 4: Generate handover prompt
 
-Show brief summary of what was saved (or "nothing new" if nothing qualified). Then: "Learnings saved. You can now run /clear to reset context."
+Build a continuation prompt that a fresh agent can use to pick up where this session left off. The prompt must be self-contained (the next agent has zero context).
+
+Structure:
+
+```
+Branch: {branch} (PR #{number} if applicable)
+
+What shipped this session: {brief list of changes, with filenames}
+
+Status: {built locally / pushed / deployed}. {test results if run}. {typecheck status}.
+
+What still needs doing:
+1. {next step}
+2. {next step}
+...
+
+Known gaps / follow-up:
+- {anything deferred or incomplete}
+```
+
+Rules:
+- Include file paths for anything created or significantly changed
+- State the git status (committed? uncommitted? pushed?)
+- If there's a plan file, reference it
+- Keep it factual, no fluff. The prompt should be copy-pasteable
+- If nothing is in progress (pure Q&A session), skip this step
+
+## Step 5: Confirm and prompt reset
+
+1. Show brief summary of what was saved (or "nothing new" if nothing qualified)
+2. Display the handover prompt in a fenced code block so user can copy it
+3. Try to copy the handover prompt to clipboard: `echo '...' | pbcopy`
+4. Tell user: "Handover prompt copied to clipboard. Paste it after /clear to continue."
+   - If pbcopy fails: "Copy the prompt above, then run /clear to reset context."
