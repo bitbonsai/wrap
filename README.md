@@ -55,9 +55,10 @@ Say any of:
 ## What it does
 
 1. **Extracts gotchas**: things that broke, wrong assumptions, counterintuitive behavior
-2. **Saves to project memory**: updates `MEMORY.md` with gotchas, user preferences, and cleans stale entries
+2. **Saves to project memory**: updates `MEMORY.md` with gotchas, user preferences, and removes stale entries
 3. **Updates project files**: if `agent-learnings.md`, `globalcontext.md`, or plan files exist, keeps them current
-4. **Prompts for context reset**: so you can `/clear` with confidence
+4. **Generates handover prompt**: a self-contained continuation prompt a fresh agent can use to pick up where you left off
+5. **Copies to clipboard**: paste it after `/clear` to continue seamlessly
 
 ## What it does NOT record
 
