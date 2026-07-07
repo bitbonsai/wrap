@@ -1,7 +1,7 @@
 ---
 name: wrap
 description: End-of-session wrap-up that saves learnings to memory and prepares for context reset. Use when the user says "wrap", "wrap up", "wrap this session", "save learnings", "end of session", "I'm done for now", "let's wrap", "remember this session", "clear context", or any variation of closing out a work session and preserving what was learned. Also trigger when the user says they're about to run /clear.
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(git status:*), Bash(git log:*), Bash(git diff:*), Bash(git branch:*), Bash(mkdir:*)
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(git status:*), Bash(git log:*), Bash(git diff:*), Bash(git branch:*), Bash(mkdir:*), Bash(mv:*)
 ---
 
 # Wrap
@@ -55,11 +55,21 @@ Update auto-memory MEMORY.md. Use the memory directory path given in your system
 - Non-obvious project context learned this session
 
 **Clean stale entries:**
-- Scan MEMORY.md for bugs/gotchas that were FIXED this session. Remove or mark resolved
+- Scan MEMORY.md for bugs/gotchas that were FIXED this session. Delete the entry and its index line entirely. Never mark `[FIXED]`, never rewrite as "Fixed in ... by adding ..." -- a resolved gotcha is noise, deletion IS the update
 - Update entries that are now inaccurate based on work done this session
 - Check if any "Active Projects" items were completed
 
 Write entries caveman-style: max compression, zero filler. Drop articles, hedging, and framing; keep exact technical terms, paths, and commands. One line per fact. `[thing] [breaks/needs] [why]. [fix].` beats a paragraph. Do NOT duplicate what's already there.
+
+This applies to EVERY line you write or edit during wrap -- new entries, updated entries, Active Projects, Q&A notes, agent-learnings.md -- not just new gotchas. No full sentences anywhere.
+
+```
+Bad:  defers rendering by keeping the old value until the browser has idle capacity
+Good: defers render: keeps old value until browser idle
+
+Bad:  [FIXED] Race in queue flush. Fixed in this session by adding a mutex around flush().
+Good: (entry deleted)
+```
 
 This is the most important step. Memory persists across all future sessions.
 
@@ -132,6 +142,7 @@ Known gaps / follow-up:
 ```
 
 Rules:
+- Use the structure above exactly: same section labels, same order. If a section is empty, write `none` under it rather than dropping it
 - Include file paths for anything created or significantly changed
 - State the git status (committed? uncommitted? pushed?) using the auto-collected session context above
 - If there's a plan file, reference it
@@ -141,8 +152,11 @@ Rules:
 ## Step 7: Save handover and prompt reset
 
 1. Show brief summary of what was saved (or "nothing new" if nothing qualified)
-2. If `.plans/next.md` already exists, move it to `.plans/next.prev.md` (keep exactly one backup), then write the new handover prompt to `.plans/next.md`
-3. Tell user, depending on whether the SessionStart hook is installed:
-   - Hook installed: "Handover saved to .plans/next.md. Run /clear; the next session picks it up automatically."
-   - No hook: "Handover saved to .plans/next.md. After /clear, tell the new agent to read .plans/next.md."
-4. If `.plans/` doesn't exist and the user declined creating it in Step 3, display the handover prompt in a fenced code block instead and tell the user to copy it manually
+2. **Backup first, always.** If `.plans/next.md` exists, run `mv .plans/next.md .plans/next.prev.md` BEFORE writing anything. Never Write over an existing `next.md`; the old handover must survive as `next.prev.md` (exactly one backup, the mv overwrites any older one)
+3. Write the new handover prompt to `.plans/next.md`
+4. Tell user, depending on whether the SessionStart hook is installed (check the project's `.claude/settings.json` for the wrap hook):
+   - Hook installed, say exactly: "Handover saved to .plans/next.md. Run /clear; the next session picks it up automatically."
+   - No hook, say exactly: "Handover saved to .plans/next.md. After /clear, tell the new agent to read .plans/next.md."
+
+   These sentences must appear verbatim in your closing message. Do not paraphrase (e.g. "the next developer should run: cat .plans/next.md" is wrong)
+5. If `.plans/` doesn't exist and the user declined creating it in Step 3, display the handover prompt in a fenced code block instead and tell the user to copy it manually
