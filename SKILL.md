@@ -1,11 +1,32 @@
 ---
 name: wrap
 description: End-of-session wrap-up that saves learnings to memory and prepares for context reset. Use when the user says "wrap", "wrap up", "wrap this session", "save learnings", "end of session", "I'm done for now", "let's wrap", "remember this session", "clear context", or any variation of closing out a work session and preserving what was learned. Also trigger when the user says they're about to run /clear.
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(git status:*), Bash(git log:*), Bash(git diff:*), Bash(git branch:*), Bash(mkdir:*)
 ---
 
 # Wrap
 
 End-of-session wrap-up. Primary goal: improve future agent performance.
+
+## Session context (auto-collected)
+
+- Branch: !`git branch --show-current 2>/dev/null || echo "not a git repo"`
+- Working tree: !`git status --porcelain 2>/dev/null | head -20`
+- Recent commits: !`git log --oneline -5 2>/dev/null`
+
+Use this for the handover prompt in Step 6. Don't re-run these commands unless the state changed after wrap started.
+
+## Checklist
+
+Copy this checklist and check off each step as you complete it:
+
+- [ ] 1. Extract gotchas
+- [ ] 2. Save to project memory
+- [ ] 3. Offer missing project files
+- [ ] 4. Offer auto-handover hook
+- [ ] 5. Update existing project files
+- [ ] 6. Generate handover prompt
+- [ ] 7. Save handover, prompt reset
 
 ## Step 1: Extract gotchas
 
@@ -54,7 +75,7 @@ If any are missing, use the AskUserQuestion tool (multiSelect) to ask which the 
 - **`globalcontext.md`**: one-page orientation snapshot (stack, commands, active work)
 - **`agent-learnings.md`**: running gotchas log by category
 
-Create only what the user selects, seeded with minimal content from this session. If the user selects nothing, skip and proceed.
+Create only what the user selects, seeded with minimal content from this session using the templates in [references/templates.md](references/templates.md). If the user selects nothing, skip and proceed.
 
 **Always gitignore the handover files.** If the project is a git repo and `.plans/` exists (or was just created), ensure `.gitignore` contains `.plans/next.md` and `.plans/next.prev.md`. These are transient per-machine state. Never commit them, and don't ask about them.
 
@@ -68,25 +89,13 @@ If `.plans/` exists and the project's `.claude/settings.json` has no wrap Sessio
 
 The hook injects `.plans/next.md` into context when a new session starts, then moves it to `.plans/next.prev.md` so a stale handover is never read twice.
 
-Merge into `.claude/settings.json` (create the file if missing, preserve all existing keys and hooks):
+If the user says yes, run exactly this command from the project root. Do not modify it or hand-edit the JSON yourself:
 
-```json
-{
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "startup|clear",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "if [ -f .plans/next.md ]; then cat .plans/next.md && mv .plans/next.md .plans/next.prev.md; fi"
-          }
-        ]
-      }
-    ]
-  }
-}
+```bash
+bash "${CLAUDE_SKILL_DIR}/scripts/install-hook.sh"
 ```
+
+The script uses `jq` if available, falls back to `python3`, and is idempotent: it appends the hook without touching existing settings, and no-ops if already installed. If it fails (neither tool present, invalid settings JSON), follow the manual merge instructions in [references/hook.md](references/hook.md).
 
 With the hook installed, `/clear` alone is enough: the next session starts with the handover already in context.
 
@@ -102,7 +111,7 @@ Check for these files and update if present. Skip silently if missing.
 
 ## Step 6: Generate handover prompt
 
-Build a continuation prompt that a fresh agent can use to pick up where this session left off. The prompt must be self-contained (the next agent has zero context).
+Build the handover prompt: a self-contained prompt a fresh agent can use to pick up where this session left off (the next agent has zero context).
 
 Structure:
 
@@ -124,7 +133,7 @@ Known gaps / follow-up:
 
 Rules:
 - Include file paths for anything created or significantly changed
-- State the git status (committed? uncommitted? pushed?)
+- State the git status (committed? uncommitted? pushed?) using the auto-collected session context above
 - If there's a plan file, reference it
 - Keep it factual, no fluff. The prompt must stand alone
 - If nothing is in progress (pure Q&A session), skip this step

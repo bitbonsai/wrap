@@ -23,8 +23,14 @@ You can use [skills.sh](https://skills.sh) to add this skill globally.
 
 ### Claude Code
 
+There is no `claude skill install` command. Clone into your skills directory instead:
+
 ```bash
-claude skill install github:bitbonsai/wrap
+# global (all projects)
+git clone https://github.com/bitbonsai/wrap.git ~/.claude/skills/wrap
+
+# or per project
+git clone https://github.com/bitbonsai/wrap.git .claude/skills/wrap
 ```
 
 ### pi.dev
@@ -156,7 +162,7 @@ With the optional `SessionStart` hook (wrap offers to install it), `/clear` alon
 
 Both files are transient per-machine state; wrap adds them to `.gitignore` automatically.
 
-The hook wrap installs into `.claude/settings.json`:
+wrap installs the hook with a bundled script (`scripts/install-hook.sh`, uses `jq` or `python3`, whichever is available) that merges into `.claude/settings.json` without touching your existing settings. What it adds:
 
 ```json
 {
