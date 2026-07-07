@@ -56,9 +56,11 @@ Say any of:
 
 1. **Extracts gotchas**: things that broke, wrong assumptions, counterintuitive behavior
 2. **Saves to project memory**: updates `MEMORY.md` with gotchas, user preferences, and removes stale entries
-3. **Updates project files**: if `agent-learnings.md`, `globalcontext.md`, or plan files exist, keeps them current
-4. **Generates handover prompt**: a self-contained continuation prompt a fresh agent can use to pick up where you left off
-5. **Copies to clipboard**: paste it after `/clear` to continue seamlessly
+3. **Offers to create project files**: if `globalcontext.md`, `agent-learnings.md`, or `.plans/` are missing, asks which to create and whether to commit or gitignore them
+4. **Offers an auto-handover hook**: a `SessionStart` hook that loads the handover into the next session automatically after `/clear`
+5. **Updates project files**: if they exist, keeps them current
+6. **Generates handover prompt**: a self-contained continuation prompt a fresh agent can use to pick up where you left off
+7. **Saves to `.plans/next.md`**: with the hook, just run `/clear`; without it, tell the new agent to read the file
 
 ## What it does NOT record
 
@@ -69,7 +71,7 @@ Say any of:
 
 ## Recommended project setup
 
-The skill works with any repo, but it's designed to augment a few specific files. It updates all of these if present, skips silently if not.
+The skill works with any repo, but it's designed to augment a few specific files. It updates all of these if present. If they're missing, it offers to create them on first wrap (and asks whether to commit them or add them to `.gitignore`).
 
 ### `agent-learnings.md`
 
@@ -128,3 +130,48 @@ A lightweight project tracker with three sections:
 ```
 
 **Why it helps:** Agents constantly lose track of what's in progress versus what's done. A simple index prevents "did we already do this?" and keeps work organized without a full project management tool.
+
+### `.plans/next.md`
+
+The handover prompt from the last wrap. Written automatically at the end of each session, overwritten on the next one.
+
+```markdown
+Branch: feature/oauth-migration (PR #42)
+
+What shipped this session: token refresh in src/auth/refresh.ts, e2e tests
+
+Status: pushed, tests green, typecheck clean.
+
+What still needs doing:
+1. Wire refresh into the session middleware
+2. Remove the legacy JWT path
+
+Known gaps / follow-up:
+- Rate limiting on the refresh endpoint is stubbed
+```
+
+**Why it helps:** The next agent picks up exactly where the last session left off. No re-explaining, no digging through git log.
+
+With the optional `SessionStart` hook (wrap offers to install it), `/clear` alone is enough: the hook injects `next.md` into the new session and moves it to `next.prev.md`, so a stale handover is never read twice and you always keep one backup. Without the hook, tell the new agent to read `.plans/next.md`.
+
+Both files are transient per-machine state; wrap adds them to `.gitignore` automatically.
+
+The hook wrap installs into `.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f .plans/next.md ]; then cat .plans/next.md && mv .plans/next.md .plans/next.prev.md; fi"
+          }
+        ]
+      }
+    ]
+  }
+}
+```

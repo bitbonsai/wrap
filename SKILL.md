@@ -26,7 +26,7 @@ Format: one line per gotcha. Code example only if the fix is non-obvious.
 
 ## Step 2: Save to project memory (PRIMARY)
 
-Update auto-memory MEMORY.md (`~/.claude/projects/<current-project>/memory/`):
+Update auto-memory MEMORY.md. Use the memory directory path given in your system prompt (don't guess it; the on-disk project directory names are munged paths):
 
 **Add new entries:**
 - Gotchas and corrections discovered this session
@@ -38,11 +38,59 @@ Update auto-memory MEMORY.md (`~/.claude/projects/<current-project>/memory/`):
 - Update entries that are now inaccurate based on work done this session
 - Check if any "Active Projects" items were completed
 
-Keep entries concise (1-2 lines each). Do NOT duplicate what's already there.
+Write entries caveman-style: max compression, zero filler. Drop articles, hedging, and framing; keep exact technical terms, paths, and commands. One line per fact. `[thing] [breaks/needs] [why]. [fix].` beats a paragraph. Do NOT duplicate what's already there.
 
 This is the most important step. Memory persists across all future sessions.
 
-## Step 3: Update project files (if they exist)
+## Step 3: Offer to create project files (if missing)
+
+If the session is non-interactive (headless, CI, no user available to answer), skip this step and Step 4 entirely: ask nothing, create nothing.
+
+Check for `globalcontext.md`, `agent-learnings.md`, and `.plans/` in the project root.
+
+If any are missing, use the AskUserQuestion tool (multiSelect) to ask which the user wants created:
+
+- **`.plans/`**: holds `INDEX.md` (project tracker) and `next.md` (handover prompt). Needed for Step 7.
+- **`globalcontext.md`**: one-page orientation snapshot (stack, commands, active work)
+- **`agent-learnings.md`**: running gotchas log by category
+
+Create only what the user selects, seeded with minimal content from this session. If the user selects nothing, skip and proceed.
+
+**Always gitignore the handover files.** If the project is a git repo and `.plans/` exists (or was just created), ensure `.gitignore` contains `.plans/next.md` and `.plans/next.prev.md`. These are transient per-machine state. Never commit them, and don't ask about them.
+
+If anything was created and the project is a git repo, ask a follow-up with AskUserQuestion: **commit** these files or **add to .gitignore**? The commit covers `globalcontext.md`, `agent-learnings.md`, and `.plans/INDEX.md` only, never `next.md`. Apply the choice (a third option, "leave untracked", does nothing). When committing, use a plain message like `Add agent context files`.
+
+Only ask once per wrap. Do not re-ask about files the user declined earlier in the session.
+
+## Step 4: Offer auto-handover hook (once per project)
+
+If `.plans/` exists and the project's `.claude/settings.json` has no wrap SessionStart hook yet, ask with AskUserQuestion whether to install one. Don't re-ask if the user declined earlier in the session.
+
+The hook injects `.plans/next.md` into context when a new session starts, then moves it to `.plans/next.prev.md` so a stale handover is never read twice.
+
+Merge into `.claude/settings.json` (create the file if missing, preserve all existing keys and hooks):
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f .plans/next.md ]; then cat .plans/next.md && mv .plans/next.md .plans/next.prev.md; fi"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+With the hook installed, `/clear` alone is enough: the next session starts with the handover already in context.
+
+## Step 5: Update project files (if they exist)
 
 Check for these files and update if present. Skip silently if missing.
 
@@ -50,11 +98,9 @@ Check for these files and update if present. Skip silently if missing.
 
 **globalcontext.md**: Update version + recent releases table if version was bumped. Update "Active work" if work was completed. Update "Known issues" if new issues found or old ones resolved.
 
-**.plans/next-steps.md**: Update "Current state" header if version was bumped. Update "Known issues" if issues resolved or new ones found.
-
 **.plans/INDEX.md**: Move completed plans to "Recently shipped". Add new plans if created during session. Keep "Recently shipped" to last ~5 entries.
 
-## Step 4: Generate handover prompt
+## Step 6: Generate handover prompt
 
 Build a continuation prompt that a fresh agent can use to pick up where this session left off. The prompt must be self-contained (the next agent has zero context).
 
@@ -80,13 +126,14 @@ Rules:
 - Include file paths for anything created or significantly changed
 - State the git status (committed? uncommitted? pushed?)
 - If there's a plan file, reference it
-- Keep it factual, no fluff. The prompt should be copy-pasteable
+- Keep it factual, no fluff. The prompt must stand alone
 - If nothing is in progress (pure Q&A session), skip this step
 
-## Step 5: Confirm and prompt reset
+## Step 7: Save handover and prompt reset
 
 1. Show brief summary of what was saved (or "nothing new" if nothing qualified)
-2. Display the handover prompt in a fenced code block so user can copy it
-3. Try to copy the handover prompt to clipboard: `echo '...' | pbcopy`
-4. Tell user: "Handover prompt copied to clipboard. Paste it after /clear to continue."
-   - If pbcopy fails: "Copy the prompt above, then run /clear to reset context."
+2. If `.plans/next.md` already exists, move it to `.plans/next.prev.md` (keep exactly one backup), then write the new handover prompt to `.plans/next.md`
+3. Tell user, depending on whether the SessionStart hook is installed:
+   - Hook installed: "Handover saved to .plans/next.md. Run /clear; the next session picks it up automatically."
+   - No hook: "Handover saved to .plans/next.md. After /clear, tell the new agent to read .plans/next.md."
+4. If `.plans/` doesn't exist and the user declined creating it in Step 3, display the handover prompt in a fenced code block instead and tell the user to copy it manually
