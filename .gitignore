@@ -1,0 +1,5 @@
+# local agent context, not part of the published skill
+.plans/
+globalcontext.md
+agent-learnings.md
+.claude/
