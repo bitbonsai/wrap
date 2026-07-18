@@ -152,7 +152,7 @@ Rules:
 ## Step 7: Save handover and prompt reset
 
 1. Show brief summary of what was saved (or "nothing new" if nothing qualified)
-2. **Backup first, always.** If `.plans/next.md` exists, run `mv .plans/next.md .plans/next.prev.md` BEFORE writing anything. Never Write over an existing `next.md`; the old handover must survive as `next.prev.md` (exactly one backup, the mv overwrites any older one)
+2. **Backup first, always.** If `.plans/next.md` exists, copy its contents into `.plans/next.prev.md` using Read + Write (no `mv`, no Bash -- avoids a permission prompt): Read `.plans/next.md`; if `.plans/next.prev.md` exists, Read it too (Write refuses to overwrite an unread file); then Write the old handover to `.plans/next.prev.md`. Do this BEFORE writing anything else. The old handover must survive as `next.prev.md` (exactly one backup, the Write overwrites any older one)
 3. Write the new handover prompt to `.plans/next.md`
 4. Tell user, depending on whether the SessionStart hook is installed (check the project's `.claude/settings.json` for the wrap hook):
    - Hook installed, say exactly: "Handover saved to .plans/next.md. Run /clear; the next session picks it up automatically."
