@@ -9,7 +9,7 @@
 	<br>
 </div>
 
-> Most session logs are noise. "Shipped v3.57.4" is in git. "CSS is 18KB now" is in the code. The only thing worth persisting is what went **wrong** and what the user **prefers**. because those are invisible to future agents reading the codebase.
+> Most session logs are noise. "Shipped v3.57.4" is in git. "CSS is 18KB now" is in the code. The only thing worth persisting is what went **wrong** and what the user **prefers**, because those are invisible to future agents reading the codebase.
 
 ## Install
 
@@ -60,13 +60,13 @@ Say any of:
 
 ## What it does
 
-1. **Extracts gotchas**: things that broke, wrong assumptions, counterintuitive behavior
-2. **Saves to project memory**: updates `MEMORY.md` with gotchas, user preferences, and removes stale entries
-3. **Offers to create project files**: if `globalcontext.md`, `agent-learnings.md`, or `.plans/` are missing, asks which to create and whether to commit or gitignore them
-4. **Offers an auto-handover hook**: a `SessionStart` hook that loads the handover into the next session automatically after `/clear`
-5. **Updates project files**: if they exist, keeps them current
-6. **Generates handover prompt**: a self-contained continuation prompt a fresh agent can use to pick up where you left off
-7. **Saves to `.plans/next.md`**: with the hook, just run `/clear`; without it, tell the new agent to read the file
+Three steps:
+
+1. **Extract & route** — pulls gotchas from the session (things that broke, wrong assumptions, counterintuitive behavior) and writes each one to exactly one home: project facts go to `AGENTS.md`, personal preferences and machine-specific quirks go to Claude's auto-memory.
+2. **Sync** — fixes contradictions the session created: a README that now documents the wrong command, a shipped item still listed as active in `.plans/INDEX.md`, a memory entry about a bug that got fixed.
+3. **Handover** — writes a self-contained continuation prompt to `.plans/next.md` so the next session picks up exactly where this one left off.
+
+Setup is a side effect, not a questionnaire. Missing files are created silently and noted in the summary; git is the review. The only question wrap ever asks is whether to install the auto-handover hook, once per project, and it remembers if you decline.
 
 ## What it does NOT record
 
@@ -75,71 +75,48 @@ Say any of:
 - Rollout timelines
 - Anything derivable from reading the code
 
-## Recommended project setup
+## The files
 
-The skill works with any repo, but it's designed to augment a few specific files. It updates all of these if present. If they're missing, it offers to create them on first wrap (and asks whether to commit them or add them to `.gitignore`).
+### `AGENTS.md`
 
-### `agent-learnings.md`
-
-A running list of gotchas organized by category. Think of it as your project's "lessons learned" log.
-
-```markdown
-## Code traps
-- Don't use `find -delete` — it deletes directories matching the pattern too
-- `bun run` doesn't pass env vars the same way as `npm run`
-
-## Deploy flow
-- Always run `terraform plan` before `apply` — the staging state drifts fast
-
-## Infra
-- The ECS cluster name is `prod-web`, not `production-web`
-```
-
-**Why it helps:** Future agents don't have to relearn the hard way. A single gotcha can save hours of debugging the same trap twice.
-
-### `globalcontext.md`
-
-A living orientation snapshot. One page that answers "what is this thing and how do I work on it?"
+The one committed context file: a brief description of the repo plus a running gotcha list. It travels with `git clone`, so learnings work on every machine and for every teammate, and both Claude Code and OpenCode load it automatically.
 
 ```markdown
 # MyProject
 
-- **Stack:** Next.js 14, Tailwind, PostgreSQL, Vercel
-- **Node version:** 20.x
-- **Key env vars:** `DATABASE_URL`, `OPENAI_API_KEY`
-- **Dev server:** `bun run dev` (port 3000)
-- **Active work:** Migrating auth from JWT to OAuth2
-- **Last deploy:** 2026-04-19
+Payment dashboard. Next.js, deployed on Vercel.
+
+## Gotchas
+
+- Don't use `find -delete`, it deletes directories matching the pattern too
+- `bun run` doesn't pass env vars the same way as `npm run`
+- Always run `terraform plan` before `apply`, the staging state drifts fast
 ```
 
-**Why it helps:** When an agent joins a session cold (especially after `/clear`), it has zero context. This file is a cheat sheet that prevents the "what framework is this again?" warm-up loop.
+**Why one file:** a gotcha in a committed file is portable memory. A gotcha only in local auto-memory is stuck on one machine, in one harness. If your project uses `CLAUDE.md` for this role, wrap updates that instead. If the gotcha list outgrows a page, wrap splits it into `agent-learnings.md` and references it from `AGENTS.md`.
+
+Personal preferences ("be terse", "never force-push") and machine-specific facts (local auth quirks) go to Claude's auto-memory instead, they don't belong in the repo.
 
 ### `.plans/INDEX.md`
 
-A lightweight project tracker with three sections:
+A lightweight tracker with three sections:
 
 ```markdown
 ## Active
 - [ ] Add dark mode toggle (waiting on design tokens)
-- [ ] Refactor webhook handlers to use Bull queues
-- [ ] Fix flaky e2e test on `/dashboard/billing`
 
 ## Planned
 - [ ] Migrate from Stripe Checkout to Payment Elements
-- [ ] Add real-time collaboration via Y.js
-- [ ] Evaluate Vercel Edge vs Node runtime for API routes
 
 ## Recently shipped
 - [x] v2.4.0 — Team billing + seat management
-- [x] Migrated auth from JWT to OAuth2 (GitHub + Google)
-- [x] Switched test runner from Jest to Vitest
 ```
 
-**Why it helps:** Agents constantly lose track of what's in progress versus what's done. A simple index prevents "did we already do this?" and keeps work organized without a full project management tool.
+**Why it helps:** agents lose track of what's in progress versus done. A simple index prevents "did we already do this?" without a full project management tool.
 
 ### `.plans/next.md`
 
-The handover prompt from the last wrap. Written automatically at the end of each session, overwritten on the next one.
+The handover prompt from the last wrap, written automatically at the end of each session:
 
 ```markdown
 Branch: feature/oauth-migration (PR #42)
@@ -156,11 +133,11 @@ Known gaps / follow-up:
 - Rate limiting on the refresh endpoint is stubbed
 ```
 
-**Why it helps:** The next agent picks up exactly where the last session left off. No re-explaining, no digging through git log.
+**Why it helps:** the next agent picks up exactly where the last session left off. No re-explaining, no digging through git log.
 
-With the optional `SessionStart` hook (wrap offers to install it), `/clear` alone is enough: the hook injects `next.md` into the new session and moves it to `next.prev.md`, so a stale handover is never read twice and you always keep one backup. Without the hook, tell the new agent to read `.plans/next.md`.
+With the optional `SessionStart` hook (wrap offers to install it, once), `/clear` alone is enough: the hook injects `next.md` into the new session and moves it to `next.prev.md`, so a stale handover is never read twice and you always keep one backup. Without the hook, tell the new agent to read `.plans/next.md`.
 
-Both files are transient per-machine state; wrap adds them to `.gitignore` automatically.
+`next.md` and `next.prev.md` are transient per-machine state; wrap adds them to `.gitignore` automatically.
 
 wrap installs the hook with a bundled script (`scripts/install-hook.sh`, uses `jq` or `python3`, whichever is available) that merges into `.claude/settings.json` without touching your existing settings. What it adds:
 
@@ -181,3 +158,7 @@ wrap installs the hook with a bundled script (`scripts/install-hook.sh`, uses `j
   }
 }
 ```
+
+## Migrating from older wrap versions
+
+Earlier versions maintained `globalcontext.md` and `agent-learnings.md` as separate files. On your next wrap, the skill offers once to fold their non-derivable content into `AGENTS.md` and delete them. Orientation facts an agent can derive from the repo (stack, commands in package.json) are dropped rather than migrated.

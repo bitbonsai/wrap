@@ -1,38 +1,22 @@
 # Seed templates
 
-Templates for files created in Step 3. Fill placeholders from session context; drop any section you have nothing for. Keep seeds minimal, these files grow through use, not at creation.
+Templates for files created silently when missing. Fill placeholders from session context; drop any section you have nothing for. Keep seeds minimal, these files grow through use, not at creation.
 
-## globalcontext.md
+## AGENTS.md
 
 ```markdown
 # {project name}
 
-- **Stack:** {frameworks, language, database, hosting}
-- **Runtime:** {node/python/etc version}
-- **Key env vars:** {names only, never values}
-- **Dev server:** {command} (port {port})
-- **Test:** {command}
-- **Active work:** {what's in progress right now}
-- **Last deploy:** {date, if known}
+{one line: what this repo is and does}
+
+{only non-derivable facts: unusual conventions, commands that aren't in package.json/Makefile, deploy quirks. Nothing an agent can learn by reading the repo.}
+
+## Gotchas
+
+- {gotchas extracted this session, one line each}
 ```
 
-## agent-learnings.md
-
-```markdown
-# Agent learnings
-
-Gotchas only. One line each. Newest at top of its section.
-
-## Code traps
-
-## Deploy flow
-
-## Infrastructure
-
-## Testing
-```
-
-Seed with any gotchas already extracted in Step 1.
+If the gotcha list outgrows about a page, move it to `agent-learnings.md` (sections: Code traps, Deploy flow, Infrastructure, Testing) and leave one line in AGENTS.md: `Gotchas: see agent-learnings.md`.
 
 ## .plans/INDEX.md
 
@@ -49,7 +33,7 @@ Seed with any gotchas already extracted in Step 1.
 
 ## .gitignore entries
 
-Always append (Step 3, git repos only):
+Always append (git repos only):
 
 ```
 .plans/next.md
