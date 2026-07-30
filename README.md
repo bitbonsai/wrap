@@ -5,6 +5,7 @@
 	<br>
 	<h1>wrap</h1>
 	<p>End-of-session wrap-up for <a href="https://github.com/anthropics/claude-code">Claude Code</a>. Extract gotchas, save learnings, reset with confidence.</p>
+	<p><a href="https://github.com/bitbonsai/wrap/releases"><img src="https://img.shields.io/github/v/tag/bitbonsai/wrap?label=version" alt="version"></a></p>
 	<br>
 	<br>
 </div>
@@ -161,4 +162,6 @@ wrap installs the hook with a bundled script (`scripts/install-hook.sh`, uses `j
 
 ## Migrating from older wrap versions
 
-Earlier versions maintained `globalcontext.md` and `agent-learnings.md` as separate files. On your next wrap, the skill offers once to fold their non-derivable content into `AGENTS.md` and delete them. Orientation facts an agent can derive from the repo (stack, commands in package.json) are dropped rather than migrated.
+Earlier versions (v1.x) maintained `globalcontext.md` and `agent-learnings.md` as separate files. On your next wrap, the skill offers once to fold their non-derivable content into `AGENTS.md` and delete them. Orientation facts an agent can derive from the repo (stack, commands in package.json) are dropped rather than migrated.
+
+To stay on the old design, pin the tag: `git -C ~/.claude/skills/wrap checkout v1.0.0`.
