@@ -5,7 +5,7 @@
 	<br>
 	<h1>wrap</h1>
 	<p>End-of-session wrap-up for <a href="https://github.com/anthropics/claude-code">Claude Code</a>. Extract gotchas, save learnings, reset with confidence.</p>
-	<p><a href="https://github.com/bitbonsai/wrap/releases"><img src="https://img.shields.io/github/v/tag/bitbonsai/wrap?label=version" alt="version"></a></p>
+	<p><a href="https://github.com/bitbonsai/wrap/releases"><img src="https://img.shields.io/github/v/tag/bitbonsai/wrap?label=version" alt="version"></a> <a href="https://docs.tessl.io/improving-your-skills/reviewing-skills"><img src="https://img.shields.io/badge/tessl_review-99%25-brightgreen" alt="tessl review 99%"></a></p>
 	<br>
 	<br>
 </div>
