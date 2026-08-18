@@ -1,9 +1,9 @@
 ---
 name: wrap
 description: End-of-session wrap-up that extracts gotchas from the session, routes them to AGENTS.md and auto-memory, syncs README and plan files, and writes a handover prompt so the next session picks up where this one left off. Use when the user says "wrap", "wrap up", "wrap this session", "save learnings", "end of session", "I'm done for now", "let's wrap", "remember this session", "clear context", or any variation of closing out a work session and preserving what was learned. Also trigger when the user says they're about to run /clear.
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(git status:*), Bash(git log:*), Bash(git diff:*), Bash(git branch:*), Bash(mkdir:*), Bash(mv:*)
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(git status:*), Bash(git log:*), Bash(git diff:*), Bash(git branch:*), Bash(mkdir:*), Bash(mv:*), Bash(${CLAUDE_SKILL_DIR}/scripts/*)
 metadata:
-  version: 2.3.0
+  version: 2.4.0
 ---
 
 # Wrap
@@ -35,11 +35,11 @@ Use this for the handover. Don't re-run these commands unless the state changed 
 **Handover automation (the only setup question):** if `.plans/` exists, either the project's `.claude/settings.json` lacks the wrap SessionStart hook or the global Pi wrap extension is missing, and auto-memory has no record of the user declining, ask once with AskUserQuestion whether to install auto-handover support. Both integrations inject `.plans/next.md` once, then archive it to `.plans/next.prev.md`. On yes, run these from the project root (both idempotent; the Claude installer uses jq or python3):
 
 ```bash
-bash "${CLAUDE_SKILL_DIR}/scripts/install-hook.sh"
-bash "${CLAUDE_SKILL_DIR}/scripts/install-pi-extension.sh"
+${CLAUDE_SKILL_DIR}/scripts/install-hook.sh
+${CLAUDE_SKILL_DIR}/scripts/install-pi-extension.sh
 ```
 
-The Claude hook handles startup and `/clear`. The global Pi extension handles startup and `/new`, including sessions whose cwd differs from the wrapped worktree via `~/.pi/agent/wrap-next.json`. If the Claude installer fails, follow [references/hook.md](references/hook.md). On decline, save the decline to auto-memory so no future wrap re-asks.
+The Claude hook handles startup and `/clear`. The global Pi extension handles startup and `/new`; the queued pointer in `~/.pi/agent/wrap-next.json` lets it find the handover when the session starts in a subdirectory of the wrapped project (a pointer from a different project is ignored and restored). If the Claude installer fails, follow [references/hook.md](references/hook.md). On decline, save the decline to auto-memory so no future wrap re-asks.
 
 **Non-interactive session** (headless, CI): ask nothing, create nothing new; still update existing files and write the handover.
 
@@ -75,7 +75,7 @@ Fix contradictions the session created. Contradiction-triggered only, don't refr
 
 - **README**: if the session changed something README documents (commands, install steps, usage, config), update that section only, preserving the existing voice and structure. Otherwise don't touch it.
 - **`.plans/INDEX.md`**: move completed items to "Recently shipped" (keep 5; drop older lines, git history keeps them), add plans created this session, drop Planned items that were superseded.
-- **Plan files**: move plan files for shipped or abandoned work from `.plans/` to `.plans/.archive/` (`mkdir` if missing). Only active and planned plan files stay in `.plans/` root.
+- **Plan files**: save any plan doc produced this session as `.plans/YYYY-MM-DD-slug.md` and list it in INDEX. Move plan files for shipped or abandoned work from `.plans/` to `.plans/.archive/` (`mkdir` if missing); on first archive, add the footer line `Archived plans: .plans/.archive/` to INDEX.md if missing. Only active and planned plan files stay in `.plans/` root.
 - **Auto-memory**: delete entries for gotchas FIXED this session, deletion IS the update, never mark `[FIXED]` or rewrite as "fixed by...". Correct entries the session proved inaccurate.
 - **AGENTS.md**: correct any existing line the session proved wrong.
 
@@ -103,13 +103,13 @@ Include file paths for anything created or significantly changed, the git state 
 
 Then:
 
-1. **Backup first, always.** If `.plans/next.md` exists, copy its contents into `.plans/next.prev.md` using Read + Write (no `mv`, no Bash, avoids a permission prompt): Read `.plans/next.md`; if `.plans/next.prev.md` exists, Read it too (Write refuses to overwrite an unread file); then Write the old handover to `.plans/next.prev.md`. Do this BEFORE writing anything else. Never Write over an existing `next.md`.
+1. **Backup first, always.** If `.plans/next.md` exists, run `mv .plans/next.md .plans/next.prev.md` BEFORE writing anything else (overwriting the old backup is fine). Never Write over an existing `next.md`.
 2. Write the handover to `.plans/next.md`.
 3. Queue that exact file for Pi. Run from the project root:
    ```bash
-   bash "${CLAUDE_SKILL_DIR}/scripts/queue-pi-handover.sh" .plans/next.md
+   ${CLAUDE_SKILL_DIR}/scripts/queue-pi-handover.sh .plans/next.md
    ```
-   This writes only the absolute handover path to `~/.pi/agent/wrap-next.json`; the latest wrap wins.
+   No-op when the Pi extension isn't installed; otherwise writes the absolute handover path to `~/.pi/agent/wrap-next.json` (latest wrap wins).
 4. Close with a brief summary of what was saved, created, or synced ("nothing new" is a valid answer), then tell the user how to continue:
    - Pi extension installed: run `/new`; the new session picks the queued handover up automatically.
    - Claude hook installed: run `/clear`; the next session picks the handover up automatically.

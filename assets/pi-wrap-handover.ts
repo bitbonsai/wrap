@@ -6,6 +6,14 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 const configDir = process.env.PI_CODING_AGENT_DIR ?? join(homedir(), ".pi", "agent");
 const pointerPath = join(configDir, "wrap-next.json");
 
+async function restoreOrDrop(claim: string): Promise<void> {
+	try {
+		await rename(claim, pointerPath);
+	} catch {
+		await rm(claim, { force: true });
+	}
+}
+
 async function claimPointer(): Promise<{ claim: string; next: string } | undefined> {
 	const claim = `${pointerPath}.claim-${process.pid}`;
 	try {
@@ -31,20 +39,34 @@ async function claimPointer(): Promise<{ claim: string; next: string } | undefin
 
 async function consumeHandover(cwd: string): Promise<string | undefined> {
 	const pointer = await claimPointer();
-	const next = pointer?.next ?? join(cwd, ".plans", "next.md");
+	let claim = pointer?.claim;
+	let next = join(cwd, ".plans", "next.md");
+
+	if (pointer) {
+		// Honor the pointer only inside its own project; another project's
+		// handover must not leak into this session.
+		const project = dirname(dirname(pointer.next));
+		if (cwd === project || cwd.startsWith(project + "/")) {
+			next = pointer.next;
+		} else {
+			await restoreOrDrop(pointer.claim);
+			claim = undefined;
+		}
+	}
 
 	try {
 		const content = await readFile(next, "utf8");
 		await writeFile(join(dirname(next), "next.prev.md"), content);
 		await unlink(next);
-		if (pointer) await rm(pointer.claim, { force: true });
+		if (claim) await rm(claim, { force: true });
 		return content;
-	} catch {
-		if (pointer) {
-			try {
-				await rename(pointer.claim, pointerPath);
-			} catch {
-				await rm(pointer.claim, { force: true });
+	} catch (error) {
+		if (claim) {
+			// Handover already consumed elsewhere: the pointer is stale, drop it.
+			if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+				await rm(claim, { force: true });
+			} else {
+				await restoreOrDrop(claim);
 			}
 		}
 	}

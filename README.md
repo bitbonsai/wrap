@@ -164,7 +164,7 @@ wrap installs the hook with a bundled script (`scripts/install-hook.sh`, uses `j
 
 ### Pi support
 
-wrap also works with Pi (`@earendil-works/pi-coding-agent`). It offers to install a global extension (`scripts/install-pi-extension.sh` copies `assets/pi-wrap-handover.ts` to `~/.pi/agent/extensions/`) that injects the handover on startup and `/new`. Each wrap queues the handover path in `~/.pi/agent/wrap-next.json` (`scripts/queue-pi-handover.sh`), so Pi finds it even when the new session starts in a different directory.
+wrap also works with Pi (`@earendil-works/pi-coding-agent`). It offers to install a global extension (`scripts/install-pi-extension.sh` copies `assets/pi-wrap-handover.ts` to `~/.pi/agent/extensions/`) that injects the handover on startup and `/new`. Each wrap queues the handover path in `~/.pi/agent/wrap-next.json` (`scripts/queue-pi-handover.sh`), so Pi finds it even when the new session starts in a subdirectory of the wrapped project. A pointer left by a different project is ignored and restored, and a stale pointer (handover already consumed by the Claude hook) is cleaned up.
 
 ## Migrating from older wrap versions
 

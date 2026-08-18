@@ -1,5 +1,6 @@
-# local agent context, not part of the published skill
-.plans/
+# transient handover state, per-machine
+.plans/next.md
+.plans/next.prev.md
 globalcontext.md
 agent-learnings.md
 .claude/
