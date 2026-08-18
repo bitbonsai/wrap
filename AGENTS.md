@@ -10,5 +10,5 @@ Repo is the distribution: anything committed ships to users who clone it. Test b
 - `claude skill install X` isn't a command; CLI treats unknown subcommands as a prompt and silently starts a session. Check `claude --help` before documenting CLI invocations.
 - `jq` not preinstalled on most Linux distros or macOS; install-hook.sh falls back to python3 for that reason. Keep both paths working.
 - Hook matcher must be `startup|clear` (not resume/compact), or handover gets re-injected and consumed on session resume.
-- Installed copy at `~/.claude/skills/wrap` is a git clone: update with `git pull`, never by copying files.
+- Installed copy at `~/.claude/skills/wrap` is a symlink to `~/.agents/skills/wrap`, a plain directory (no .git): sync it by copying files after pushing here.
 - Test install-hook.sh three ways: fresh dir, re-run (idempotency), merge into settings.json that already has other hooks and permissions.

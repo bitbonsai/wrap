@@ -16,7 +16,7 @@ Templates for files created silently when missing. Fill placeholders from sessio
 - {gotchas extracted this session, one line each}
 ```
 
-If the gotcha list outgrows about a page, move it to `agent-learnings.md` (sections: Code traps, Deploy flow, Infrastructure, Testing) and leave one line in AGENTS.md: `Gotchas: see agent-learnings.md`.
+If the gotcha list outgrows about a page, prune it (drop fixed/derivable/stale lines) — never move gotchas to a separate file. Group with subheadings inside `## Gotchas` (Code traps, Deploy flow, Infrastructure, Testing) if grouping helps.
 
 ## .plans/INDEX.md
 

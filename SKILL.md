@@ -3,7 +3,7 @@ name: wrap
 description: End-of-session wrap-up that extracts gotchas from the session, routes them to AGENTS.md and auto-memory, syncs README and plan files, and writes a handover prompt so the next session picks up where this one left off. Use when the user says "wrap", "wrap up", "wrap this session", "save learnings", "end of session", "I'm done for now", "let's wrap", "remember this session", "clear context", or any variation of closing out a work session and preserving what was learned. Also trigger when the user says they're about to run /clear.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(git status:*), Bash(git log:*), Bash(git diff:*), Bash(git branch:*), Bash(mkdir:*), Bash(mv:*)
 metadata:
-  version: 2.1.0
+  version: 2.3.0
 ---
 
 # Wrap
@@ -22,23 +22,24 @@ Use this for the handover. Don't re-run these commands unless the state changed 
 
 ## Files wrap maintains
 
-- **`AGENTS.md`** (committed) — brief repo description plus gotchas. The primary store: travels with `git clone`, auto-loaded by Claude Code and OpenCode. If the project uses `CLAUDE.md` for this role, update that instead of creating a second file.
+- **`AGENTS.md`** (committed) — brief repo description plus gotchas. The primary store: travels with `git clone`, auto-loaded by Claude Code, Pi, and OpenCode. If the project uses `CLAUDE.md` for this role, update that instead of creating a second file.
 - **Auto-memory** (path given in your system prompt; don't guess it) — personal preferences and machine-specific facts only.
 - **`.plans/INDEX.md`** (committed) — lightweight tracker: Active / Planned / Recently shipped.
 - **`.plans/*.md`** plan files (committed) — named `YYYY-MM-DD-slug.md`. Shipped/abandoned ones live in `.plans/.archive/`.
-- **`.plans/next.md`** (gitignored) — the handover prompt, consumed by the SessionStart hook.
+- **`.plans/next.md`** (gitignored) — the handover prompt, consumed by the Claude SessionStart hook or Pi extension.
 
 **Missing files: create silently.** Seed from this session using [references/templates.md](references/templates.md), mention what was created in the closing summary, and let git be the review. Never ask permission to create these. In a git repo, ensure `.gitignore` contains `.plans/next.md` and `.plans/next.prev.md`.
 
-**Legacy files:** if `globalcontext.md` or `agent-learnings.md` exist, offer once (AskUserQuestion) to fold their non-derivable content into AGENTS.md and delete them. Skip lines derivable from the repo (stack, commands visible in package.json etc.). If the user declines, record that in auto-memory and never offer again. Exception: an `agent-learnings.md` that AGENTS.md already references is the intentional overflow file, keep it and append there.
+**Legacy files:** if `globalcontext.md` or `agent-learnings.md` exist, fold their non-derivable content into AGENTS.md (`## Gotchas`) and delete them — AGENTS.md is the only store; no overflow or side files. Skip lines derivable from the repo (stack, commands visible in package.json etc.), and update any references to the deleted files (CLAUDE.md/AGENTS.md `@includes`, "see agent-learnings.md" pointers). Mention the fold in the closing summary; git is the review. If the user objects, record that in auto-memory and never fold in that repo again.
 
-**Hook (the only setup question):** if `.plans/` exists, the project's `.claude/settings.json` has no wrap SessionStart hook, and auto-memory has no record of the user declining, ask once with AskUserQuestion whether to install the auto-handover hook. It injects `.plans/next.md` into the next session, then moves it to `.plans/next.prev.md` so a stale handover is never read twice. On yes, run exactly this from the project root (idempotent, uses jq or python3; if it fails, follow [references/hook.md](references/hook.md)):
+**Handover automation (the only setup question):** if `.plans/` exists, either the project's `.claude/settings.json` lacks the wrap SessionStart hook or the global Pi wrap extension is missing, and auto-memory has no record of the user declining, ask once with AskUserQuestion whether to install auto-handover support. Both integrations inject `.plans/next.md` once, then archive it to `.plans/next.prev.md`. On yes, run these from the project root (both idempotent; the Claude installer uses jq or python3):
 
 ```bash
 bash "${CLAUDE_SKILL_DIR}/scripts/install-hook.sh"
+bash "${CLAUDE_SKILL_DIR}/scripts/install-pi-extension.sh"
 ```
 
-On decline, save the decline to auto-memory so no future wrap re-asks.
+The Claude hook handles startup and `/clear`. The global Pi extension handles startup and `/new`, including sessions whose cwd differs from the wrapped worktree via `~/.pi/agent/wrap-next.json`. If the Claude installer fails, follow [references/hook.md](references/hook.md). On decline, save the decline to auto-memory so no future wrap re-asks.
 
 **Non-interactive session** (headless, CI): ask nothing, create nothing new; still update existing files and write the handover.
 
@@ -59,7 +60,7 @@ Route each fact to exactly ONE home:
 - Machine-specific fact (local auth quirks, paths) → **auto-memory**
 - In-progress state → the **handover** (Step 3), nowhere else
 
-Never write the same fact to two homes. If AGENTS.md's gotcha list outgrows about a page, split it into `agent-learnings.md` and leave a one-line reference in AGENTS.md.
+Never write the same fact to two homes. Gotchas always live inline in AGENTS.md — never split them into a separate file. If the list outgrows about a page, prune it: drop lines that became derivable from the code, were fixed, or never recurred.
 
 Write every line caveman-style: max compression, zero filler. Drop articles, hedging, framing; keep exact technical terms, paths, commands. One line per fact. `[thing] [breaks/needs] [why]. [fix].` beats a paragraph.
 
@@ -104,6 +105,12 @@ Then:
 
 1. **Backup first, always.** If `.plans/next.md` exists, copy its contents into `.plans/next.prev.md` using Read + Write (no `mv`, no Bash, avoids a permission prompt): Read `.plans/next.md`; if `.plans/next.prev.md` exists, Read it too (Write refuses to overwrite an unread file); then Write the old handover to `.plans/next.prev.md`. Do this BEFORE writing anything else. Never Write over an existing `next.md`.
 2. Write the handover to `.plans/next.md`.
-3. Close with a brief summary of what was saved, created, or synced ("nothing new" is a valid answer), then tell the user how to continue, depending on whether the wrap hook is in `.claude/settings.json`:
-   - Hook installed: run `/clear`; the next session picks the handover up automatically.
-   - No hook: after `/clear`, tell the new agent to read `.plans/next.md`.
+3. Queue that exact file for Pi. Run from the project root:
+   ```bash
+   bash "${CLAUDE_SKILL_DIR}/scripts/queue-pi-handover.sh" .plans/next.md
+   ```
+   This writes only the absolute handover path to `~/.pi/agent/wrap-next.json`; the latest wrap wins.
+4. Close with a brief summary of what was saved, created, or synced ("nothing new" is a valid answer), then tell the user how to continue:
+   - Pi extension installed: run `/new`; the new session picks the queued handover up automatically.
+   - Claude hook installed: run `/clear`; the next session picks the handover up automatically.
+   - Neither installed: start the next session in the project and tell the agent to read `.plans/next.md`.

@@ -162,6 +162,10 @@ wrap installs the hook with a bundled script (`scripts/install-hook.sh`, uses `j
 }
 ```
 
+### Pi support
+
+wrap also works with Pi (`@earendil-works/pi-coding-agent`). It offers to install a global extension (`scripts/install-pi-extension.sh` copies `assets/pi-wrap-handover.ts` to `~/.pi/agent/extensions/`) that injects the handover on startup and `/new`. Each wrap queues the handover path in `~/.pi/agent/wrap-next.json` (`scripts/queue-pi-handover.sh`), so Pi finds it even when the new session starts in a different directory.
+
 ## Migrating from older wrap versions
 
 Earlier versions (v1.x) maintained `globalcontext.md` and `agent-learnings.md` as separate files. On your next wrap, the skill offers once to fold their non-derivable content into `AGENTS.md` and delete them. Orientation facts an agent can derive from the repo (stack, commands in package.json) are dropped rather than migrated.
