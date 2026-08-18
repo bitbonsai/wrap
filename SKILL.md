@@ -3,7 +3,7 @@ name: wrap
 description: End-of-session wrap-up that extracts gotchas from the session, routes them to AGENTS.md and auto-memory, syncs README and plan files, and writes a handover prompt so the next session picks up where this one left off. Use when the user says "wrap", "wrap up", "wrap this session", "save learnings", "end of session", "I'm done for now", "let's wrap", "remember this session", "clear context", or any variation of closing out a work session and preserving what was learned. Also trigger when the user says they're about to run /clear.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(git status:*), Bash(git log:*), Bash(git diff:*), Bash(git branch:*), Bash(mkdir:*), Bash(mv:*)
 metadata:
-  version: 2.0.1
+  version: 2.1.0
 ---
 
 # Wrap
@@ -25,6 +25,7 @@ Use this for the handover. Don't re-run these commands unless the state changed 
 - **`AGENTS.md`** (committed) — brief repo description plus gotchas. The primary store: travels with `git clone`, auto-loaded by Claude Code and OpenCode. If the project uses `CLAUDE.md` for this role, update that instead of creating a second file.
 - **Auto-memory** (path given in your system prompt; don't guess it) — personal preferences and machine-specific facts only.
 - **`.plans/INDEX.md`** (committed) — lightweight tracker: Active / Planned / Recently shipped.
+- **`.plans/*.md`** plan files (committed) — named `YYYY-MM-DD-slug.md`. Shipped/abandoned ones live in `.plans/.archive/`.
 - **`.plans/next.md`** (gitignored) — the handover prompt, consumed by the SessionStart hook.
 
 **Missing files: create silently.** Seed from this session using [references/templates.md](references/templates.md), mention what was created in the closing summary, and let git be the review. Never ask permission to create these. In a git repo, ensure `.gitignore` contains `.plans/next.md` and `.plans/next.prev.md`.
@@ -72,7 +73,8 @@ Good: defers render: keeps old value until browser idle
 Fix contradictions the session created. Contradiction-triggered only, don't refresh files for the sake of it.
 
 - **README**: if the session changed something README documents (commands, install steps, usage, config), update that section only, preserving the existing voice and structure. Otherwise don't touch it.
-- **`.plans/INDEX.md`**: move completed items to "Recently shipped" (keep ~5), add plans created this session.
+- **`.plans/INDEX.md`**: move completed items to "Recently shipped" (keep 5; drop older lines, git history keeps them), add plans created this session, drop Planned items that were superseded.
+- **Plan files**: move plan files for shipped or abandoned work from `.plans/` to `.plans/.archive/` (`mkdir` if missing). Only active and planned plan files stay in `.plans/` root.
 - **Auto-memory**: delete entries for gotchas FIXED this session, deletion IS the update, never mark `[FIXED]` or rewrite as "fixed by...". Correct entries the session proved inaccurate.
 - **AGENTS.md**: correct any existing line the session proved wrong.
 

@@ -29,7 +29,11 @@ If the gotcha list outgrows about a page, move it to `agent-learnings.md` (secti
 ## Planned
 
 ## Recently shipped
+
+Archived plans: .plans/.archive/
 ```
+
+Plan files are named `YYYY-MM-DD-slug.md`. When a plan ships or is abandoned, move its file to `.plans/.archive/` — the date-prefixed names keep the archive browsable without an index.
 
 ## .gitignore entries
 

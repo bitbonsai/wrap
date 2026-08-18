@@ -115,6 +115,8 @@ A lightweight tracker with three sections:
 
 **Why it helps:** agents lose track of what's in progress versus done. A simple index prevents "did we already do this?" without a full project management tool.
 
+Recently shipped keeps the last 5 items; older lines are dropped (git history keeps them). Plan files are named `YYYY-MM-DD-slug.md`; when one ships or is abandoned, wrap moves it to `.plans/.archive/`, so `.plans/` root only holds current work.
+
 ### `.plans/next.md`
 
 The handover prompt from the last wrap, written automatically at the end of each session:
