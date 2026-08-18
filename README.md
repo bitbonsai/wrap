@@ -63,9 +63,9 @@ Say any of:
 
 Three steps:
 
-1. **Extract & route** — pulls gotchas from the session (things that broke, wrong assumptions, counterintuitive behavior) and writes each one to exactly one home: project facts go to `AGENTS.md`, personal preferences and machine-specific quirks go to Claude's auto-memory.
-2. **Sync** — fixes contradictions the session created: a README that now documents the wrong command, a shipped item still listed as active in `.plans/INDEX.md`, a memory entry about a bug that got fixed.
-3. **Handover** — writes a self-contained continuation prompt to `.plans/next.md` so the next session picks up exactly where this one left off.
+1. **Extract & route**: pulls gotchas from the session (things that broke, wrong assumptions, counterintuitive behavior) and writes each one to exactly one home: project facts go to `AGENTS.md`, personal preferences and machine-specific quirks go to Claude's auto-memory.
+2. **Sync**: fixes contradictions the session created: a README that now documents the wrong command, a shipped item still listed as active in `.plans/INDEX.md`, a memory entry about a bug that got fixed.
+3. **Handover**: writes a self-contained continuation prompt to `.plans/next.md` so the next session picks up exactly where this one left off.
 
 Setup is a side effect, not a questionnaire. Missing files are created silently and noted in the summary; git is the review. The only question wrap ever asks is whether to install the auto-handover hook, once per project, and it remembers if you decline.
 
@@ -94,7 +94,7 @@ Payment dashboard. Next.js, deployed on Vercel.
 - Always run `terraform plan` before `apply`, the staging state drifts fast
 ```
 
-**Why one file:** a gotcha in a committed file is portable memory. A gotcha only in local auto-memory is stuck on one machine, in one harness. If your project uses `CLAUDE.md` for this role, wrap updates that instead. If the gotcha list outgrows a page, wrap splits it into `agent-learnings.md` and references it from `AGENTS.md`.
+**Why one file:** a gotcha in a committed file is portable memory. A gotcha only in local auto-memory is stuck on one machine, in one harness. If your project uses `CLAUDE.md` for this role, wrap updates that instead. If the gotcha list outgrows a page, wrap prunes it (drops lines that got fixed, became derivable from the code, or never recurred) rather than splitting it into a second file.
 
 Personal preferences ("be terse", "never force-push") and machine-specific facts (local auth quirks) go to Claude's auto-memory instead, they don't belong in the repo.
 
@@ -110,7 +110,7 @@ A lightweight tracker with three sections:
 - [ ] Migrate from Stripe Checkout to Payment Elements
 
 ## Recently shipped
-- [x] v2.4.0 — Team billing + seat management
+- [x] v2.4.0: Team billing + seat management
 ```
 
 **Why it helps:** agents lose track of what's in progress versus done. A simple index prevents "did we already do this?" without a full project management tool.
@@ -168,6 +168,6 @@ wrap also works with Pi (`@earendil-works/pi-coding-agent`). It offers to instal
 
 ## Migrating from older wrap versions
 
-Earlier versions (v1.x) maintained `globalcontext.md` and `agent-learnings.md` as separate files. On your next wrap, the skill offers once to fold their non-derivable content into `AGENTS.md` and delete them. Orientation facts an agent can derive from the repo (stack, commands in package.json) are dropped rather than migrated.
+Earlier versions (v1.x) maintained `globalcontext.md` and `agent-learnings.md` as separate files. On your next wrap, the skill folds their non-derivable content into `AGENTS.md` and deletes them, noting the fold in the closing summary (git is the review; object once and it never folds in that repo again). Orientation facts an agent can derive from the repo (stack, commands in package.json) are dropped rather than migrated.
 
 To stay on the old design, pin the tag: `git -C ~/.claude/skills/wrap checkout v1.0.0`.
