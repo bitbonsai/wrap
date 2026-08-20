@@ -3,7 +3,7 @@ name: wrap
 description: End-of-session wrap-up that extracts gotchas from the session, routes them to AGENTS.md and auto-memory, syncs README and plan files, and writes a handover prompt so the next session picks up where this one left off. Use when the user says "wrap", "wrap up", "wrap this session", "save learnings", "end of session", "I'm done for now", "let's wrap", "remember this session", "clear context", or any variation of closing out a work session and preserving what was learned. Also trigger when the user says they're about to run /clear.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(git status:*), Bash(git log:*), Bash(git diff:*), Bash(git branch:*), Bash(mkdir:*), Bash(mv:*), Bash(${CLAUDE_SKILL_DIR}/scripts/*)
 metadata:
-  version: 2.4.0
+  version: 2.4.1
 ---
 
 # Wrap
@@ -16,7 +16,7 @@ Flow: **Extract & route → Sync → Handover.** Setup (missing files, hook) hap
 
 - Branch: !`git branch --show-current 2>/dev/null || echo "not a git repo"`
 - Working tree: !`git status --porcelain 2>/dev/null | head -20`
-- Recent commits: !`git log --oneline -5 2>/dev/null`
+- Recent commits: !`git log --oneline -5 2>/dev/null || echo "no commits"`
 
 Use this for the handover. Don't re-run these commands unless the state changed after wrap started.
 

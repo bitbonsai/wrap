@@ -15,3 +15,4 @@ Release: bump `metadata.version` in SKILL.md, commit, annotated tag `v<same vers
 - `~/.claude/skills/wrap` → `~/.agents/skills/wrap` → this repo (symlink chain): the installed skill IS this working tree. No sync step; uncommitted edits are live in sessions immediately.
 - README duplicates SKILL.md behavior (files, retention, hook, Pi): changing the flow means editing both, or they drift.
 - Test install-hook.sh three ways: fresh dir, re-run (idempotency), merge into settings.json that already has other hooks and permissions.
+- Every !`cmd` substitution in SKILL.md must exit 0: non-zero aborts the whole skill with "Shell command failed for pattern", and 2>/dev/null hides the reason. Guard with `|| echo fallback` (bit a user whose session cwd wasn't a git repo: git log exits 128).
