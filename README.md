@@ -171,3 +171,7 @@ wrap also works with Pi (`@earendil-works/pi-coding-agent`). It offers to instal
 Earlier versions (v1.x) maintained `globalcontext.md` and `agent-learnings.md` as separate files. On your next wrap, the skill folds their non-derivable content into `AGENTS.md` and deletes them, noting the fold in the closing summary (git is the review; object once and it never folds in that repo again). Orientation facts an agent can derive from the repo (stack, commands in package.json) are dropped rather than migrated.
 
 To stay on the old design, pin the tag: `git -C ~/.claude/skills/wrap checkout v1.0.0`.
+
+## Thanks
+
+[@cntlsn](https://github.com/cntlsn) for reporting and diagnosing the non-git-cwd crash fixed in v2.4.1.
