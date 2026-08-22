@@ -3,7 +3,7 @@ name: wrap
 description: End-of-session wrap-up that extracts gotchas from the session, routes them to AGENTS.md and auto-memory, syncs README and plan files, and writes a handover prompt so the next session picks up where this one left off. Use when the user says "wrap", "wrap up", "wrap this session", "save learnings", "end of session", "I'm done for now", "let's wrap", "remember this session", "clear context", or any variation of closing out a work session and preserving what was learned. Also trigger when the user says they're about to run /clear.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(git status:*), Bash(git log:*), Bash(git diff:*), Bash(git branch:*), Bash(mkdir:*), Bash(mv:*), Bash(${CLAUDE_SKILL_DIR}/scripts/*)
 metadata:
-  version: 2.5.0
+  version: 2.6.0
 ---
 
 # Wrap
@@ -41,7 +41,7 @@ ${CLAUDE_SKILL_DIR}/scripts/install-pi-extension.sh
 
 The Claude hook handles startup and `/clear`. The global Pi extension handles startup and `/new`; the queued pointer in `~/.pi/agent/wrap-next.json` lets it find the handover when the session starts in a subdirectory of the wrapped project (a pointer from a different project is ignored and restored). If the Claude installer fails, follow [references/hook.md](references/hook.md). On decline, save the decline to auto-memory so no future wrap re-asks.
 
-**Non-interactive session** (headless, CI): ask nothing, create nothing new; still update existing files and write the handover.
+**Non-interactive session** (headless, CI): ask nothing, install nothing (no hooks, no extensions). Still maintain the files above, creating them if missing: a gotcha that only lives in the handover dies after one read, so skipping AGENTS.md here loses it.
 
 **Degrade by capability.** Any host that reads Agent Skills (OpenCode, Cursor, others) runs the core flow; when a feature named here is missing, apply the fallback and move on:
 - No AskUserQuestion → ask the setup question in plain text; if that's not possible, skip setup entirely.
@@ -50,7 +50,7 @@ The Claude hook handles startup and `/clear`. The global Pi extension handles st
 
 ## Step 1: Extract & route
 
-Review the conversation for GOTCHAS ONLY. A gotcha is:
+Review the conversation for GOTCHAS ONLY; everything else is recoverable from git or the code. A gotcha is:
 
 1. **Something that broke**: caused a bug, wasted time, or required a fix
 2. **A wrong assumption**: had to be corrected mid-session
@@ -65,7 +65,7 @@ Route each fact to exactly ONE home:
 - Machine-specific fact (local auth quirks, paths) → **auto-memory**
 - In-progress state → the **handover** (Step 3), nowhere else
 
-Never write the same fact to two homes. Gotchas always live inline in AGENTS.md; never split them into a separate file. If the list outgrows about a page, prune it: drop lines that became derivable from the code, were fixed, or never recurred.
+Never write the same fact to two homes; duplicates drift apart and the next agent can't tell which one is true. Gotchas always live inline in AGENTS.md; never split them into a separate file. If the list outgrows about a page, prune it: drop lines that became derivable from the code, were fixed, or never recurred.
 
 Write every line caveman-style: max compression, zero filler. Drop articles, hedging, framing; keep exact technical terms, paths, commands. One line per fact. `[thing] [breaks/needs] [why]. [fix].` beats a paragraph.
 
@@ -100,15 +100,22 @@ Status: {built locally / pushed / deployed}. {test results}. {typecheck status}.
 What still needs doing:
 1. {next step}
 
+What didn't work (don't retry):
+- {approaches tried and abandoned this session, with why}
+
 Known gaps / follow-up:
 - {anything deferred or incomplete}
+
+Before acting on this handover, run git status and git log; if reality differs from the state above, trust reality and flag the drift.
 ```
+
+Drop the "didn't work" section if nothing was tried and abandoned; keep the git check line always.
 
 Include file paths for anything created or significantly changed, the git state (committed? pushed?) from the auto-collected context, and a reference to the plan file if one exists. Factual, no fluff.
 
 Then:
 
-1. **Backup first, always.** If `.plans/next.md` exists, run `mv .plans/next.md .plans/next.prev.md` BEFORE writing anything else (overwriting the old backup is fine). Never Write over an existing `next.md`.
+1. **Backup first, always.** If `.plans/next.md` exists, run `mv .plans/next.md .plans/next.prev.md` BEFORE writing anything else (overwriting the old backup is fine). Never Write over an existing `next.md`: it may hold an unconsumed handover, and overwriting destroys the only copy.
 2. Write the handover to `.plans/next.md`.
 3. Queue that exact file for Pi. Run from the project root:
    ```bash
