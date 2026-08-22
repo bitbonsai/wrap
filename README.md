@@ -4,7 +4,7 @@
 	<br>
 	<br>
 	<h1>wrap</h1>
-	<p>End-of-session wrap-up for <a href="https://github.com/anthropics/claude-code">Claude Code</a>. Extract gotchas, save learnings, reset with confidence.</p>
+	<p>End-of-session wrap-up for <a href="https://github.com/anthropics/claude-code">Claude Code</a>. Saves what broke and what you prefer, then hands the rest to the next session.</p>
 	<p><a href="https://github.com/bitbonsai/wrap/releases"><img src="https://img.shields.io/github/v/tag/bitbonsai/wrap?label=version" alt="version"></a> <a href="https://docs.tessl.io/improving-your-skills/reviewing-skills"><img src="https://img.shields.io/badge/tessl_review-99%25-brightgreen" alt="tessl review 99%"></a></p>
 	<br>
 	<br>
@@ -20,7 +20,7 @@
 npx skills add github:bitbonsai/wrap
 ```
 
-You can use [skills.sh](https://skills.sh) to add this skill globally.
+[skills.sh](https://skills.sh) installs the skill globally.
 
 ### Claude Code
 
@@ -63,11 +63,11 @@ Say any of:
 
 Three steps:
 
-1. **Extract & route**: pulls gotchas from the session (things that broke, wrong assumptions, counterintuitive behavior) and writes each one to exactly one home: project facts go to `AGENTS.md`, personal preferences and machine-specific quirks go to Claude's auto-memory.
+1. **Extract & route**: pulls gotchas from the session (things that broke, wrong assumptions, counterintuitive behavior) and writes each one to exactly one home. Project facts go to `AGENTS.md`; personal preferences and machine-specific quirks go to Claude's auto-memory.
 2. **Sync**: fixes contradictions the session created: a README that now documents the wrong command, a shipped item still listed as active in `.plans/INDEX.md`, a memory entry about a bug that got fixed.
 3. **Handover**: writes a self-contained continuation prompt to `.plans/next.md` so the next session picks up exactly where this one left off.
 
-Setup is a side effect, not a questionnaire. Missing files are created silently and noted in the summary; git is the review. The only question wrap ever asks is whether to install the auto-handover hook, once per project, and it remembers if you decline.
+Setup happens as a side effect. Missing files are created silently and noted in the summary; git is the review. The only question wrap ever asks is whether to install auto-handover (the Claude hook, plus the Pi extension if you use Pi), once per project, and it remembers if you decline.
 
 ## What it does NOT record
 
@@ -136,7 +136,7 @@ Known gaps / follow-up:
 - Rate limiting on the refresh endpoint is stubbed
 ```
 
-**Why it helps:** the next agent picks up exactly where the last session left off. No re-explaining, no digging through git log.
+**Why it helps:** the next agent picks up exactly where the last session left off, instead of re-deriving state from git log or asking you to explain it again.
 
 With the optional `SessionStart` hook (wrap offers to install it, once), `/clear` alone is enough: the hook injects `next.md` into the new session and moves it to `next.prev.md`, so a stale handover is never read twice and you always keep one backup. Without the hook, tell the new agent to read `.plans/next.md`.
 

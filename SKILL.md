@@ -3,7 +3,7 @@ name: wrap
 description: End-of-session wrap-up that extracts gotchas from the session, routes them to AGENTS.md and auto-memory, syncs README and plan files, and writes a handover prompt so the next session picks up where this one left off. Use when the user says "wrap", "wrap up", "wrap this session", "save learnings", "end of session", "I'm done for now", "let's wrap", "remember this session", "clear context", or any variation of closing out a work session and preserving what was learned. Also trigger when the user says they're about to run /clear.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(git status:*), Bash(git log:*), Bash(git diff:*), Bash(git branch:*), Bash(mkdir:*), Bash(mv:*), Bash(${CLAUDE_SKILL_DIR}/scripts/*)
 metadata:
-  version: 2.4.1
+  version: 2.4.2
 ---
 
 # Wrap
@@ -42,6 +42,8 @@ ${CLAUDE_SKILL_DIR}/scripts/install-pi-extension.sh
 The Claude hook handles startup and `/clear`. The global Pi extension handles startup and `/new`; the queued pointer in `~/.pi/agent/wrap-next.json` lets it find the handover when the session starts in a subdirectory of the wrapped project (a pointer from a different project is ignored and restored). If the Claude installer fails, follow [references/hook.md](references/hook.md). On decline, save the decline to auto-memory so no future wrap re-asks.
 
 **Non-interactive session** (headless, CI): ask nothing, create nothing new; still update existing files and write the handover.
+
+**Other harnesses** (OpenCode etc.): if a tool or feature named here is missing (AskUserQuestion, auto-memory, SessionStart hooks), skip that step silently — ask no setup questions, install nothing, and put facts that would go to auto-memory in the handover instead.
 
 ## Step 1: Extract & route
 
