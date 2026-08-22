@@ -16,3 +16,5 @@ Release: bump `metadata.version` in SKILL.md, commit, annotated tag `v<same vers
 - README duplicates SKILL.md behavior (files, retention, hook, Pi): changing the flow means editing both, or they drift.
 - Test install-hook.sh three ways: fresh dir, re-run (idempotency), merge into settings.json that already has other hooks and permissions.
 - Every !`cmd` substitution in SKILL.md must exit 0: non-zero aborts the whole skill with "Shell command failed for pattern", and 2>/dev/null hides the reason. Guard with `|| echo fallback` (bit a user whose session cwd wasn't a git repo: git log exits 128).
+- Subagent tests of wrap have no clean baseline: installed skill auto-triggers from available_skills even when the test prompt names no skill. Renaming inside ~/.claude/skills (wrap.disabled) still loads; park the symlink outside the dir for true A/B.
+- Fixture-repo wrap runs leak real machine state: gotchas land in the caller's auto-memory and step 3.3 queues ~/.pi/agent/wrap-next.json at the fixture path. Delete both after test runs.

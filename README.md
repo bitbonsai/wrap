@@ -134,8 +134,14 @@ What still needs doing:
 1. Wire refresh into the session middleware
 2. Remove the legacy JWT path
 
+What didn't work (don't retry):
+- Refreshing inside the fetch interceptor: races concurrent requests, two tokens issued
+
 Known gaps / follow-up:
 - Rate limiting on the refresh endpoint is stubbed
+
+Before acting on this handover, run git status and git log; if reality
+differs from the state above, trust reality and flag the drift.
 ```
 
 **Why it helps:** the next agent picks up exactly where the last session left off, instead of re-deriving state from git log or asking you to explain it again.
