@@ -5,7 +5,7 @@
 	<br>
 	<h1>wrap</h1>
 	<p>End-of-session wrap-up for <a href="https://github.com/anthropics/claude-code">Claude Code</a>. Saves what broke and what you prefer, then hands the rest to the next session.</p>
-	<p><a href="https://github.com/bitbonsai/wrap/releases"><img src="https://img.shields.io/github/v/tag/bitbonsai/wrap?label=version" alt="version"></a> <a href="https://docs.tessl.io/improving-your-skills/reviewing-skills"><img src="https://img.shields.io/badge/tessl_review-99%25-brightgreen" alt="tessl review 99%"></a></p>
+	<p><a href="https://github.com/bitbonsai/wrap/releases"><img src="https://img.shields.io/github/v/tag/bitbonsai/wrap?label=version" alt="version"></a> <a href="https://docs.tessl.io/improving-your-skills/reviewing-skills"><img src="https://img.shields.io/badge/tessl_review-96%25-brightgreen" alt="tessl review 96%"></a></p>
 	<br>
 	<br>
 </div>
@@ -150,29 +150,11 @@ With the optional `SessionStart` hook (wrap offers to install it, once), `/clear
 
 `next.md` and `next.prev.md` are transient per-machine state; wrap adds them to `.gitignore` automatically.
 
-wrap installs the hook with a bundled script (`scripts/install-hook.sh`, uses `jq` or `python3`, whichever is available) that merges into `.claude/settings.json` without touching your existing settings. What it adds:
-
-```json
-{
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "startup|clear",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "if [ -f .plans/next.md ]; then cat .plans/next.md && mv .plans/next.md .plans/next.prev.md; fi"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
+wrap installs the hook with a bundled script (`scripts/install-hook.sh`, uses `jq` or `python3`, whichever is available) that merges into `.claude/settings.json` without touching your existing settings. The exact JSON it adds, and manual install steps, are in [`references/hook.md`](references/hook.md).
 
 ### Pi support
 
-wrap also works with Pi (`@earendil-works/pi-coding-agent`). It offers to install a global extension (`scripts/install-pi-extension.sh` copies `assets/pi-wrap-handover.ts` to `~/.pi/agent/extensions/`) that injects the handover on startup and `/new`. Each wrap queues the handover path in `~/.pi/agent/wrap-next.json` (`scripts/queue-pi-handover.sh`), so Pi finds it even when the new session starts in a subdirectory of the wrapped project. A pointer left by a different project is ignored and restored, and a stale pointer (handover already consumed by the Claude hook) is cleaned up.
+wrap also works with Pi (`@earendil-works/pi-coding-agent`). It offers to install a global extension that injects the handover on startup and `/new`, and finds it even when the new session starts in a subdirectory of the wrapped project. Exact behavior lives in [`SKILL.md`](SKILL.md), which is the source of truth for the flow.
 
 ## Migrating from older wrap versions
 
