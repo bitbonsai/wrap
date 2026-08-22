@@ -3,14 +3,14 @@ name: wrap
 description: End-of-session wrap-up that extracts gotchas from the session, routes them to AGENTS.md and auto-memory, syncs README and plan files, and writes a handover prompt so the next session picks up where this one left off. Use when the user says "wrap", "wrap up", "wrap this session", "save learnings", "end of session", "I'm done for now", "let's wrap", "remember this session", "clear context", or any variation of closing out a work session and preserving what was learned. Also trigger when the user says they're about to run /clear.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(git status:*), Bash(git log:*), Bash(git diff:*), Bash(git branch:*), Bash(mkdir:*), Bash(mv:*), Bash(${CLAUDE_SKILL_DIR}/scripts/*)
 metadata:
-  version: 2.5.0
+  version: 2.5.1
 ---
 
 # Wrap
 
 End-of-session wrap-up. Goal: improve future agent performance. Persist what the code can't tell the next agent, then hand over in-progress work.
 
-Flow: **Extract & route → Sync → Handover.** Setup (missing files, hook) happens as a side effect, not a phase.
+Flow: **Extract & route → Sync → Handover.** Setup (missing files, hook) happens as a side effect along the way.
 
 ## Session context (auto-collected)
 
@@ -22,17 +22,17 @@ Use this for the handover. Don't re-run these commands unless the state changed 
 
 ## Files wrap maintains
 
-- **`AGENTS.md`** (committed) — brief repo description plus gotchas. The primary store: travels with `git clone`, auto-loaded by Claude Code, Pi, OpenCode, and Cursor. If the project uses `CLAUDE.md` for this role, update that instead of creating a second file.
-- **Auto-memory** — personal preferences and machine-specific facts only. On Claude Code the path is given in your system prompt (don't guess it). On hosts without persistent memory, put these facts in the handover instead; never commit them.
-- **`.plans/INDEX.md`** (committed) — lightweight tracker: Active / Planned / Recently shipped.
-- **`.plans/*.md`** plan files (committed) — named `YYYY-MM-DD-slug.md`. Shipped/abandoned ones live in `.plans/.archive/`.
-- **`.plans/next.md`** (gitignored) — the handover prompt, consumed by the Claude SessionStart hook or Pi extension.
+- **`AGENTS.md`** (committed): brief repo description plus gotchas. The primary store: travels with `git clone`, auto-loaded by Claude Code, Pi, OpenCode, and Cursor. If the project uses `CLAUDE.md` for this role, update that instead of creating a second file.
+- **Auto-memory**: personal preferences and machine-specific facts only. On Claude Code the path is given in your system prompt (don't guess it). On hosts without persistent memory, put these facts in the handover instead; never commit them.
+- **`.plans/INDEX.md`** (committed): lightweight tracker with Active, Planned, and Recently shipped sections.
+- **`.plans/*.md`** plan files (committed): named `YYYY-MM-DD-slug.md`. Shipped/abandoned ones live in `.plans/.archive/`.
+- **`.plans/next.md`** (gitignored): the handover prompt, consumed by the Claude SessionStart hook or Pi extension.
 
 **Missing files: create silently.** Seed from this session using [references/templates.md](references/templates.md), mention what was created in the closing summary, and let git be the review. Never ask permission to create these. In a git repo, ensure `.gitignore` contains `.plans/next.md` and `.plans/next.prev.md`.
 
-**Legacy files:** if `globalcontext.md` or `agent-learnings.md` exist, fold their non-derivable content into AGENTS.md (`## Gotchas`) and delete them — AGENTS.md is the only store; no overflow or side files. Skip lines derivable from the repo (stack, commands visible in package.json etc.), and update any references to the deleted files (CLAUDE.md/AGENTS.md `@includes`, "see agent-learnings.md" pointers). Mention the fold in the closing summary; git is the review. If the user objects, record that in auto-memory and never fold in that repo again.
+**Legacy files:** if `globalcontext.md` or `agent-learnings.md` exist, fold their non-derivable content into AGENTS.md (`## Gotchas`) and delete them. AGENTS.md is the only store; no overflow or side files. Skip lines derivable from the repo (stack, commands visible in package.json etc.), and update any references to the deleted files (CLAUDE.md/AGENTS.md `@includes`, "see agent-learnings.md" pointers). Mention the fold in the closing summary; git is the review. If the user objects, record that in auto-memory and never fold in that repo again.
 
-**Handover automation (the only setup question):** if `.plans/` exists, either the project's `.claude/settings.json` lacks the wrap SessionStart hook or the global Pi wrap extension is missing, and there's no record of the user declining, ask once whether to install auto-handover support — with AskUserQuestion on Claude Code, as a plain question on other interactive hosts. Both integrations inject `.plans/next.md` once, then archive it to `.plans/next.prev.md`. On yes, run these from the project root (both idempotent; the Claude installer uses jq or python3; Claude Code substitutes `${CLAUDE_SKILL_DIR}` — on other hosts use the directory containing this SKILL.md):
+**Handover automation (the only setup question):** if `.plans/` exists, either the project's `.claude/settings.json` lacks the wrap SessionStart hook or the global Pi wrap extension is missing, and there's no record of the user declining, ask once whether to install auto-handover support (AskUserQuestion on Claude Code, a plain question on other interactive hosts). Both integrations inject `.plans/next.md` once, then archive it to `.plans/next.prev.md`. On yes, run these from the project root (both idempotent; the Claude installer uses jq or python3; Claude Code substitutes `${CLAUDE_SKILL_DIR}`, other hosts use the directory containing this SKILL.md):
 
 ```bash
 ${CLAUDE_SKILL_DIR}/scripts/install-hook.sh
@@ -43,7 +43,7 @@ The Claude hook handles startup and `/clear`. The global Pi extension handles st
 
 **Non-interactive session** (headless, CI): ask nothing, create nothing new; still update existing files and write the handover.
 
-**Degrade by capability, not by host.** Any host that reads Agent Skills (OpenCode, Cursor, others) runs the core flow; when a feature named here is missing, apply the fallback and move on:
+**Degrade by capability.** Any host that reads Agent Skills (OpenCode, Cursor, others) runs the core flow; when a feature named here is missing, apply the fallback and move on:
 - No AskUserQuestion → ask the setup question in plain text; if that's not possible, skip setup entirely.
 - No auto-memory → personal and machine facts go in the handover; persist a setup decline as `<!-- wrap: auto-handover declined -->` at the top of `.plans/INDEX.md` so no future wrap re-asks.
 - No SessionStart hooks or extensions → skip the installers; close by telling the user to point the next session at `.plans/next.md`.
@@ -52,9 +52,9 @@ The Claude hook handles startup and `/clear`. The global Pi extension handles st
 
 Review the conversation for GOTCHAS ONLY. A gotcha is:
 
-1. **Something that broke** — caused a bug, wasted time, or required a fix
-2. **A wrong assumption** — had to be corrected mid-session
-3. **Counterintuitive behavior** — an API, tool, or system that doesn't work how you'd expect
+1. **Something that broke**: caused a bug, wasted time, or required a fix
+2. **A wrong assumption**: had to be corrected mid-session
+3. **Counterintuitive behavior**: an API, tool, or system that doesn't work how you'd expect
 
 NOT gotchas: what shipped (git log has it), feature descriptions, timelines, anything derivable from reading the code.
 
@@ -65,7 +65,7 @@ Route each fact to exactly ONE home:
 - Machine-specific fact (local auth quirks, paths) → **auto-memory**
 - In-progress state → the **handover** (Step 3), nowhere else
 
-Never write the same fact to two homes. Gotchas always live inline in AGENTS.md — never split them into a separate file. If the list outgrows about a page, prune it: drop lines that became derivable from the code, were fixed, or never recurred.
+Never write the same fact to two homes. Gotchas always live inline in AGENTS.md; never split them into a separate file. If the list outgrows about a page, prune it: drop lines that became derivable from the code, were fixed, or never recurred.
 
 Write every line caveman-style: max compression, zero filler. Drop articles, hedging, framing; keep exact technical terms, paths, commands. One line per fact. `[thing] [breaks/needs] [why]. [fix].` beats a paragraph.
 

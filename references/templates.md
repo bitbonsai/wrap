@@ -16,7 +16,7 @@ Templates for files created silently when missing. Fill placeholders from sessio
 - {gotchas extracted this session, one line each}
 ```
 
-If the gotcha list outgrows about a page, prune it (drop fixed/derivable/stale lines) — never move gotchas to a separate file. Group with subheadings inside `## Gotchas` (Code traps, Deploy flow, Infrastructure, Testing) if grouping helps.
+If the gotcha list outgrows about a page, prune it (drop fixed/derivable/stale lines); never move gotchas to a separate file. Group with subheadings inside `## Gotchas` (Code traps, Deploy flow, Infrastructure, Testing) if grouping helps.
 
 ## .plans/INDEX.md
 
@@ -33,7 +33,7 @@ If the gotcha list outgrows about a page, prune it (drop fixed/derivable/stale l
 Archived plans: .plans/.archive/
 ```
 
-Plan files are named `YYYY-MM-DD-slug.md`. When a plan ships or is abandoned, move its file to `.plans/.archive/` — the date-prefixed names keep the archive browsable without an index.
+Plan files are named `YYYY-MM-DD-slug.md`. When a plan ships or is abandoned, move its file to `.plans/.archive/`; the date-prefixed names keep the archive browsable without an index.
 
 ## .gitignore entries
 
