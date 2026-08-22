@@ -40,13 +40,15 @@ git clone https://github.com/bitbonsai/wrap.git .claude/skills/wrap
 pi install git:github.com/bitbonsai/wrap
 ```
 
-### OpenCode
+### OpenCode, Cursor, and other Agent Skills hosts
 
-OpenCode is compatible with Claude skills. Clone into `.claude/skills/`:
+Any host that reads the Agent Skills format can run wrap. OpenCode reads `.claude/skills/`; for other hosts, clone into their skills directory:
 
 ```bash
 git clone https://github.com/bitbonsai/wrap.git .claude/skills/wrap
 ```
+
+wrap degrades by capability: hosts without a question tool, persistent memory, or session hooks still get the full extract-sync-handover flow, and wrap tells you to point the next session at `.plans/next.md` instead of installing anything.
 
 ## Usage
 
