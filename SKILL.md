@@ -13,7 +13,7 @@ description: >-
   or lines, wrapping content into another format, or clearing caches.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(git status:*), Bash(git log:*), Bash(git diff:*), Bash(git branch:*), Bash(mkdir:*), Bash(mv:*), Bash(${CLAUDE_SKILL_DIR}/scripts/*)
 metadata:
-  version: 2.8.0
+  version: 2.9.0
 ---
 
 # Wrap
@@ -92,7 +92,7 @@ Fix contradictions the session created. Contradiction-triggered only, don't refr
 
 - **README**: if the session changed something README documents (commands, install steps, usage, config), update that section only, preserving the existing voice and structure. Otherwise don't touch it.
 - **`.plans/INDEX.md`**: move completed items to "Recently shipped" (keep 5; drop older lines, git history keeps them), add plans created this session, drop Planned items that were superseded.
-- **Plan files**: save any plan doc produced this session as `.plans/YYYY-MM-DD-slug.md` and list it in INDEX. Move plan files for shipped or abandoned work from `.plans/` to `.plans/.archive/` (`mkdir` if missing); on first archive, add the footer line `Archived plans: .plans/.archive/` to INDEX.md if missing. Only active and planned plan files stay in `.plans/` root.
+- **Plan files**: save any plan doc produced this session as `.plans/YYYY-MM-DD-slug.md` and list it in INDEX. Write plan and INDEX prose per [references/style.md](references/style.md): concrete facts and decisions with their why, no filler. Move plan files for shipped or abandoned work from `.plans/` to `.plans/.archive/` (`mkdir` if missing); on first archive, add the footer line `Archived plans: .plans/.archive/` to INDEX.md if missing. Only active and planned plan files stay in `.plans/` root.
 - **Auto-memory**: delete entries for gotchas FIXED this session, deletion IS the update, never mark `[FIXED]` or rewrite as "fixed by...". Correct entries the session proved inaccurate.
 - **AGENTS.md**: correct any existing line the session proved wrong.
 
@@ -123,7 +123,7 @@ Before acting on this handover, run git status and git log; if reality differs f
 
 Drop the "didn't work" section if nothing was tried and abandoned; keep the git check line always.
 
-Include file paths for anything created or significantly changed, the git state (committed? pushed?) from the auto-collected context, and a reference to the plan file if one exists. Factual, no fluff. State only what this session's conversation and the auto-collected git context support; never invent progress, test results, or user decisions.
+Include file paths for anything created or significantly changed, the git state (committed? pushed?) from the auto-collected context, and a reference to the plan file if one exists. Factual, no fluff; prose rules in [references/style.md](references/style.md). State only what this session's conversation and the auto-collected git context support; never invent progress, test results, or user decisions.
 
 Scrub secrets before writing, here and in AGENTS.md gotchas: API keys, tokens, Bearer headers, connection strings, passwords in URLs, PEM blocks — replace each with `[redacted]`. Quoted error output and pasted curl commands are the usual leak paths.
 
