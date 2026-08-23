@@ -12,7 +12,7 @@ Release: bump `metadata.version` in SKILL.md AND `version` in package.json (keep
 - `claude skill install X` isn't a command; CLI treats unknown subcommands as a prompt and silently starts a session. Check `claude --help` before documenting CLI invocations.
 - `jq` not preinstalled on most Linux distros or macOS; install-hook.sh falls back to python3 for that reason. Keep both paths working.
 - Hook matcher must be `startup|clear` (not resume/compact), or handover gets re-injected and consumed on session resume.
-- `~/.claude/skills/wrap` → `~/.agents/skills/wrap` → this repo (symlink chain): the installed skill IS this working tree. No sync step; uncommitted edits are live in sessions immediately.
+- Installed skill may be an npx-managed clone (`~/.agents/skills/wrap`), not this working tree: uncommitted edits are NOT live until pushed + `npx skills update wrap`. For live dev, symlink instead: `rm -rf ~/.agents/skills/wrap && ln -s <repo> ~/.agents/skills/wrap`.
 - README duplicates SKILL.md behavior (files, retention, hook, Pi): changing the flow means editing both, or they drift.
 - Test install-hook.sh three ways: fresh dir, re-run (idempotency), merge into settings.json that already has other hooks and permissions.
 - Every !`cmd` substitution in SKILL.md must exit 0: non-zero aborts the whole skill with "Shell command failed for pattern", and 2>/dev/null hides the reason. Guard with `|| echo fallback` (bit a user whose session cwd wasn't a git repo: git log exits 128).
