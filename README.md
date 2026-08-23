@@ -96,7 +96,7 @@ Payment dashboard. Next.js, deployed on Vercel.
 - Always run `terraform plan` before `apply`, the staging state drifts fast
 ```
 
-**Why one file:** a gotcha in a committed file is portable memory. A gotcha only in local auto-memory is stuck on one machine, in one harness. If your project uses `CLAUDE.md` for this role, wrap updates that instead. If the gotcha list outgrows a page, wrap prunes it (drops lines that got fixed, became derivable from the code, or never recurred) rather than splitting it into a second file.
+**Why one file:** a gotcha in a committed file is portable memory. A gotcha only in local auto-memory is stuck on one machine, in one harness. If your project uses `CLAUDE.md` for this role, wrap updates that instead. If the gotcha list exceeds 25 lines, wrap prunes it back to 20 (drops lines that got fixed, became derivable from the code, or never recurred) rather than splitting it into a second file.
 
 Personal preferences ("be terse", "never force-push") and machine-specific facts (local auth quirks) go to Claude's auto-memory instead, they don't belong in the repo.
 

@@ -16,7 +16,7 @@ Templates for files created silently when missing. Fill placeholders from sessio
 - {gotchas extracted this session, one line each}
 ```
 
-If the gotcha list outgrows about a page, prune it (drop fixed/derivable/stale lines); never move gotchas to a separate file. Group with subheadings inside `## Gotchas` (Code traps, Deploy flow, Infrastructure, Testing) if grouping helps.
+If the gotcha list exceeds 25 lines, prune it back to 20 (drop fixed/derivable/stale lines); never move gotchas to a separate file. Group with subheadings inside `## Gotchas` (Code traps, Deploy flow, Infrastructure, Testing) if grouping helps.
 
 ## .plans/INDEX.md
 

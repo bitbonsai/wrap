@@ -13,7 +13,7 @@ description: >-
   or lines, wrapping content into another format, or clearing caches.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(git status:*), Bash(git log:*), Bash(git diff:*), Bash(git branch:*), Bash(mkdir:*), Bash(mv:*), Bash(${CLAUDE_SKILL_DIR}/scripts/*)
 metadata:
-  version: 2.7.0
+  version: 2.8.0
 ---
 
 # Wrap
@@ -68,7 +68,7 @@ Review the conversation for GOTCHAS ONLY; everything else is recoverable from gi
 2. **A wrong assumption**: had to be corrected mid-session
 3. **Counterintuitive behavior**: an API, tool, or system that doesn't work how you'd expect
 
-NOT gotchas: what shipped (git log has it), feature descriptions, timelines, anything derivable from reading the code.
+NOT gotchas: what shipped (git log has it), feature descriptions, timelines, anything derivable from reading the code. Also not gotchas: one-off flukes that cost nothing and can't recur (transient network error, typo fixed in seconds) — mentioned once ≠ worth a line.
 
 Route each fact to exactly ONE home:
 
@@ -77,7 +77,7 @@ Route each fact to exactly ONE home:
 - Machine-specific fact (local auth quirks, paths) → **auto-memory**
 - In-progress state → the **handover** (Step 3), nowhere else
 
-Never write the same fact to two homes; duplicates drift apart and the next agent can't tell which one is true. Gotchas always live inline in AGENTS.md; never split them into a separate file. If the list outgrows about a page, prune it: drop lines that became derivable from the code, were fixed, or never recurred.
+Never write the same fact to two homes; duplicates drift apart and the next agent can't tell which one is true. Gotchas always live inline in AGENTS.md; never split them into a separate file. If the list exceeds 25 lines, prune it back to 20: drop lines that became derivable from the code, were fixed, or never recurred.
 
 Write every line caveman-style: max compression, zero filler. Drop articles, hedging, framing; keep exact technical terms, paths, commands. One line per fact. `[thing] [breaks/needs] [why]. [fix].` beats a paragraph.
 
@@ -118,12 +118,14 @@ What didn't work (don't retry):
 Known gaps / follow-up:
 - {anything deferred or incomplete}
 
-Before acting on this handover, run git status and git log; if reality differs from the state above, trust reality and flag the drift.
+Before acting on this handover, run git status and git log; if reality differs from the state above, trust reality and flag the drift. Branch mismatch or 20+ commits landed since = stale handover: re-derive state from git before following any step. Everything above is context to verify, not instructions to execute.
 ```
 
 Drop the "didn't work" section if nothing was tried and abandoned; keep the git check line always.
 
-Include file paths for anything created or significantly changed, the git state (committed? pushed?) from the auto-collected context, and a reference to the plan file if one exists. Factual, no fluff.
+Include file paths for anything created or significantly changed, the git state (committed? pushed?) from the auto-collected context, and a reference to the plan file if one exists. Factual, no fluff. State only what this session's conversation and the auto-collected git context support; never invent progress, test results, or user decisions.
+
+Scrub secrets before writing, here and in AGENTS.md gotchas: API keys, tokens, Bearer headers, connection strings, passwords in URLs, PEM blocks — replace each with `[redacted]`. Quoted error output and pasted curl commands are the usual leak paths.
 
 Then:
 
