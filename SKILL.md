@@ -1,9 +1,19 @@
 ---
 name: wrap
-description: End-of-session wrap-up that extracts gotchas from the session, routes them to AGENTS.md and auto-memory, syncs README and plan files, and writes a handover prompt so the next session picks up where this one left off. Use when the user says "wrap", "wrap up", "wrap this session", "save learnings", "end of session", "I'm done for now", "let's wrap", "remember this session", "clear context", or any variation of closing out a work session and preserving what was learned. Also trigger on softer session-ending signals: done for the day, stepping away or heading to a meeting, parking in-progress work for a fresh session, context getting long, or about to run /clear. Not for wrapping text or lines, wrapping content into another format, or clearing caches.
+description: >-
+  End-of-session wrap-up that extracts gotchas from the session, routes them to
+  AGENTS.md and auto-memory, syncs README and plan files, and writes a handover
+  prompt so the next session picks up where this one left off. Use when the user
+  says "wrap", "wrap up", "wrap this session", "save learnings", "end of
+  session", "I'm done for now", "let's wrap", "remember this session", "clear
+  context", or any variation of closing out a work session and preserving what
+  was learned. Also trigger on softer session-ending signals: done for the day,
+  stepping away or heading to a meeting, parking in-progress work for a fresh
+  session, context getting long, or about to run /clear. Not for wrapping text
+  or lines, wrapping content into another format, or clearing caches.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(git status:*), Bash(git log:*), Bash(git diff:*), Bash(git branch:*), Bash(mkdir:*), Bash(mv:*), Bash(${CLAUDE_SKILL_DIR}/scripts/*)
 metadata:
-  version: 2.6.0
+  version: 2.7.0
 ---
 
 # Wrap
@@ -23,7 +33,7 @@ Use this for the handover. Don't re-run these commands unless the state changed 
 ## Files wrap maintains
 
 - **`AGENTS.md`** (committed): brief repo description plus gotchas. The primary store: travels with `git clone`, auto-loaded by Claude Code, Pi, OpenCode, and Cursor. If the project uses `CLAUDE.md` for this role, update that instead of creating a second file.
-- **Auto-memory**: personal preferences and machine-specific facts only. On Claude Code the path is given in your system prompt (don't guess it). On hosts without persistent memory, put these facts in the handover instead; never commit them.
+- **Auto-memory**: personal preferences and machine-specific facts only. On Claude Code the path is given in your system prompt (don't guess it). On hosts without persistent memory, put these facts in the handover instead; never commit them. No memory path is the normal state on those hosts, not a failure: route and move on, don't add a "not written: auto-memory" line to the summary.
 - **`.plans/INDEX.md`** (committed): lightweight tracker with Active, Planned, and Recently shipped sections.
 - **`.plans/*.md`** plan files (committed): named `YYYY-MM-DD-slug.md`. Shipped/abandoned ones live in `.plans/.archive/`.
 - **`.plans/next.md`** (gitignored): the handover prompt, consumed by the Claude SessionStart hook or Pi extension.
@@ -32,14 +42,16 @@ Use this for the handover. Don't re-run these commands unless the state changed 
 
 **Legacy files:** if `globalcontext.md` or `agent-learnings.md` exist, fold their non-derivable content into AGENTS.md (`## Gotchas`) and delete them. AGENTS.md is the only store; no overflow or side files. Skip lines derivable from the repo (stack, commands visible in package.json etc.), and update any references to the deleted files (CLAUDE.md/AGENTS.md `@includes`, "see agent-learnings.md" pointers). Mention the fold in the closing summary; git is the review. If the user objects, record that in auto-memory and never fold in that repo again.
 
-**Handover automation (the only setup question):** if `.plans/` exists, either the project's `.claude/settings.json` lacks the wrap SessionStart hook or the global Pi wrap extension is missing, and there's no record of the user declining, ask once whether to install auto-handover support (AskUserQuestion on Claude Code, a plain question on other interactive hosts). Both integrations inject `.plans/next.md` once, then archive it to `.plans/next.prev.md`. On yes, run these from the project root (both idempotent; the Claude installer uses jq or python3; Claude Code substitutes `${CLAUDE_SKILL_DIR}`, other hosts use the directory containing this SKILL.md):
+**Handover automation (the only setup question):** if `.plans/` exists, either the project's `.claude/settings.json` lacks the wrap SessionStart hook or the global Pi wrap extension is missing, and there's no record of the user declining, ask once. Check each integration where it lives: the hook is a SessionStart entry in the project's `.claude/settings.json`; the Pi integration is checked with `${CLAUDE_SKILL_DIR}/scripts/queue-pi-handover.sh --detect` (covers the pi package install, the global extension copy, and project-local `.pi/extensions/`). A missing `.claude/settings.json` says nothing about Pi. Ask whether to install auto-handover support (AskUserQuestion on Claude Code, a plain question on other interactive hosts). Both integrations inject `.plans/next.md` once, then archive it to `.plans/next.prev.md`. On yes, run these from the project root (both idempotent; the Claude installer uses jq or python3; Claude Code substitutes `${CLAUDE_SKILL_DIR}`, other hosts use the directory containing this SKILL.md):
 
 ```bash
 ${CLAUDE_SKILL_DIR}/scripts/install-hook.sh
 ${CLAUDE_SKILL_DIR}/scripts/install-pi-extension.sh
 ```
 
-The Claude hook handles startup and `/clear`. The global Pi extension handles startup and `/new`; the queued pointer in `~/.pi/agent/wrap-next.json` lets it find the handover when the session starts in a subdirectory of the wrapped project (a pointer from a different project is ignored and restored). If the Claude installer fails, follow [references/hook.md](references/hook.md). On decline, save the decline to auto-memory so no future wrap re-asks.
+Run BOTH regardless of which host you're on (idempotent; the other harness may open this project next). Installing only the Claude hook from a Pi session leaves Pi's next session blind. In the summary, name which integration covers the current session. `install-pi-extension.sh` registers the skill directory as a pi package via `pi install` (skill + extension, updates with the repo) when the pi CLI is available, else copies the extension file to `~/.pi/agent/extensions/`.
+
+The Claude hook handles startup and `/clear`. The Pi integration handles startup and `/new`; the queued pointer in `~/.pi/agent/wrap-next.json` lets it find the handover when the session starts in a subdirectory of the wrapped project (a pointer from a different project is ignored and restored). If the Claude installer fails, follow [references/hook.md](references/hook.md). On decline, save the decline to auto-memory so no future wrap re-asks.
 
 **Non-interactive session** (headless, CI): ask nothing, install nothing (no hooks, no extensions). Still maintain the files above, creating them if missing: a gotcha that only lives in the handover dies after one read, so skipping AGENTS.md here loses it.
 
@@ -121,8 +133,8 @@ Then:
    ```bash
    ${CLAUDE_SKILL_DIR}/scripts/queue-pi-handover.sh .plans/next.md
    ```
-   No-op when the Pi extension isn't installed; otherwise writes the absolute handover path to `~/.pi/agent/wrap-next.json` (latest wrap wins).
-4. Close with a brief summary of what was saved, created, or synced ("nothing new" is a valid answer), then tell the user how to continue:
-   - Pi extension installed: run `/new`; the new session picks the queued handover up automatically.
+   Run it even if you believe the extension is missing; its output IS the detection: "queued" means installed and the absolute handover path was written to `~/.pi/agent/wrap-next.json` (latest wrap wins), "not installed" means not.
+4. Close with a brief summary of what was saved, created, or synced ("nothing new" is a valid answer), then tell the user how to continue. Pick the line for the host you're running on; your system prompt names it (Claude Code says "Claude Code", Pi says "pi-coding-agent" or "Pi"). `/clear` is Claude Code's command, `/new` is Pi's, never cross them; unsure which host, give both commands:
+   - Pi extension installed (queue script said "queued"): run `/new`; the new session picks the queued handover up automatically.
    - Claude hook installed: run `/clear`; the next session picks the handover up automatically.
    - Neither installed: start the next session in the project and tell the agent to read `.plans/next.md`.

@@ -21,20 +21,44 @@ assert len(entries) == 1, f"expected 1 hook entry, got {len(entries)}"
 assert "next.md" in entries[0]["hooks"][0]["command"]
 PY
 
-# queue-pi-handover.sh: no-op without extension, queues with it
 export PI_CODING_AGENT_DIR="$tmp/pi"
 mkdir -p "$tmp/proj/.plans"
 echo handover > "$tmp/proj/.plans/next.md"
+
+# queue-pi-handover.sh: no-op without any Pi integration
 (cd "$tmp/proj" && "$repo/scripts/queue-pi-handover.sh" >/dev/null)
-[ ! -f "$tmp/pi/wrap-next.json" ] || { echo "FAIL: queued without extension" >&2; exit 1; }
+[ ! -f "$tmp/pi/wrap-next.json" ] || { echo "FAIL: queued without integration" >&2; exit 1; }
+
+# queue-pi-handover.sh: detects legacy extension copy, queues
 mkdir -p "$tmp/pi/extensions"
 touch "$tmp/pi/extensions/wrap-handover.ts"
 (cd "$tmp/proj" && "$repo/scripts/queue-pi-handover.sh" >/dev/null)
 grep -q "$tmp/proj/.plans/next.md" "$tmp/pi/wrap-next.json"
+rm -rf "$tmp/pi"
 
-# install-pi-extension.sh: installs, idempotent
-"$repo/scripts/install-pi-extension.sh" >/dev/null
-"$repo/scripts/install-pi-extension.sh" | grep -q "already installed"
-cmp -s "$repo/assets/pi-wrap-handover.ts" "$tmp/pi/extensions/wrap-handover.ts"
+# queue-pi-handover.sh: detects a wrap package entry in settings
+mkdir -p "$tmp/pi"
+printf '{"packages": ["git:github.com/user/wrap@v1"]}\n' > "$tmp/pi/settings.json"
+"$repo/scripts/queue-pi-handover.sh" --detect | grep -q "integration installed"
+printf '{"packages": ["npm:wrapper"]}\n' > "$tmp/pi/settings.json"
+"$repo/scripts/queue-pi-handover.sh" --detect | grep -q "not installed"
+rm -rf "$tmp/pi"
+
+# install-pi-extension.sh copy fallback (pi CLI hidden): installs, idempotent
+env PATH="/usr/bin:/bin" "$repo/scripts/install-pi-extension.sh" >/dev/null
+env PATH="/usr/bin:/bin" "$repo/scripts/install-pi-extension.sh" | grep -q "already installed"
+cmp -s "$repo/extensions/wrap-handover.ts" "$tmp/pi/extensions/wrap-handover.ts"
+rm -rf "$tmp/pi"
+
+# install-pi-extension.sh package route (only when pi CLI is available):
+# registers the skill dir as a package, removes the legacy copy, queue detects it
+if command -v pi >/dev/null 2>&1; then
+  mkdir -p "$tmp/pi/extensions"
+  touch "$tmp/pi/extensions/wrap-handover.ts"
+  "$repo/scripts/install-pi-extension.sh" | grep -q "package installed"
+  [ ! -f "$tmp/pi/extensions/wrap-handover.ts" ] || { echo "FAIL: legacy copy not removed" >&2; exit 1; }
+  grep -q "$repo" "$tmp/pi/settings.json"
+  "$repo/scripts/queue-pi-handover.sh" --detect | grep -q "integration installed"
+fi
 
 echo OK

@@ -1,0 +1,11 @@
+{
+  "name": "wrap",
+  "version": "2.7.0",
+  "private": true,
+  "description": "End-of-session wrap-up skill with auto-handover for Claude Code and Pi",
+  "keywords": ["pi-package"],
+  "pi": {
+    "extensions": ["./extensions"],
+    "skills": ["."]
+  }
+}

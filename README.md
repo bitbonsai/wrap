@@ -14,13 +14,13 @@
 
 ## Install
 
-### skills.sh
+### skills.sh (recommended: one install, every harness)
 
 ```bash
 npx skills add github:bitbonsai/wrap
 ```
 
-[skills.sh](https://skills.sh) installs the skill globally.
+[skills.sh](https://skills.sh) clones once into `~/.agents/skills/wrap` and symlinks it into the agents you pick (Claude Code, Pi, Codex, Cursor, and others), so the same skill serves all of them. The per-harness automation (Claude SessionStart hook, Pi extension) isn't part of the skill format; wrap installs those itself the first time you run it, asking once.
 
 ### Claude Code
 
@@ -154,7 +154,13 @@ wrap installs the hook with a bundled script (`scripts/install-hook.sh`, uses `j
 
 ### Pi support
 
-wrap also works with Pi (`@earendil-works/pi-coding-agent`). It offers to install a global extension that injects the handover on startup and `/new`, and finds it even when the new session starts in a subdirectory of the wrapped project. Exact behavior lives in [`SKILL.md`](SKILL.md), which is the source of truth for the flow.
+wrap also works with Pi (`@earendil-works/pi-coding-agent`). The repo is a pi package, so one command installs both the skill and the handover extension:
+
+```bash
+pi install git:github.com/bitbonsai/wrap
+```
+
+The extension injects the handover on startup and `/new`, and finds it even when the new session starts in a subdirectory of the wrapped project. `pi update --all` keeps it current. If you already use wrap from a cloned skill directory, wrap's setup step registers that directory as a pi package instead (no second copy). Exact behavior lives in [`SKILL.md`](SKILL.md), which is the source of truth for the flow.
 
 ## Migrating from older wrap versions
 
